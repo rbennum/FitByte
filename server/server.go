@@ -45,9 +45,10 @@ func Start() error {
 		if sslCert == "" || sslKey == "" {
 			log.Fatal("SSL certificates not configured")
 		}
-
+		
+		host := os.Getenv("PROD_HOST")
 		err := r.RunTLS(
-			fmt.Sprintf("0.0.0.0:%s", port),
+			fmt.Sprintf("%s:%s", host, port),
 			sslCert,
 			sslKey,
 		)
@@ -56,7 +57,8 @@ func Start() error {
 		}
 	default:
 		gin.SetMode(gin.DebugMode)
-		r.Run(fmt.Sprintf("0.0.0.0:%s", port))
+		host := os.Getenv("DEBUG_HOST")
+		r.Run(fmt.Sprintf("%s:%s", host, port))
 	}
 
 	return nil

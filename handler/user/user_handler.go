@@ -31,9 +31,9 @@ func NewUserHandler(service service.UserService) UserHandler {
 // @Accept json
 // @Produce json
 // @Param data body dto.RequestRegister true "data"
-// @Success 201 {object} helper.Response{data=dto.Response} "CREATED"
-// @Failure 400 {object} helper.Response{errors=helper.ExampleErrorResponse} "Bad Request"
-// @Failure 409 {object} helper.Response{errors=helper.ExampleErrorResponse} "data conflict, like email already exist"
+// @Success 201 {object} helper.Response{data=helper.Response} "CREATED"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 409 {object} helper.Response{errors=helper.ErrorResponse} "data conflict, like email already exist"
 // @Router /users/register [POST]
 func (h handler) Register(ctx *gin.Context) {
 	input := new(dto.RequestRegister)
@@ -68,8 +68,8 @@ func (h handler) Register(ctx *gin.Context) {
 // @Produce  json
 // @Param data body dto.RequestLogin true "data"
 // @Success 200 {object} helper.Response{data=dto.ResponseLogin} "OK"
-// @Failure 400 {object} helper.Response{errors=helper.ExampleErrorResponse} "Bad Request"
-// @Failure 404 {object} helper.Response{errors=helper.ExampleErrorResponse} "Record not found"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Record not found"
 // @Router /users/login [POST]
 func (h handler) Login(ctx *gin.Context) {
 	input := new(dto.RequestLogin)
@@ -94,10 +94,10 @@ func (h handler) Login(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "Bearer + user token"
-// @Param data body dto.ExampleRequestUpdate true "data"
-// @Success 200 {object} helper.Response{data=dto.Response} "OK"
-// @Failure 400 {object} helper.Response{errors=helper.ExampleErrorResponse} "Bad Request"
-// @Failure 401 {object} helper.Response{errors=helper.ExampleErrorResponse} "Unauthorization"
+// @Param data body dto.UserRequestUpdate true "data"
+// @Success 200 {object} helper.Response{data=helper.Response} "OK"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
 // @Router /users [PUT]
 func (h handler) Update(ctx *gin.Context) {
 	input := new(dto.RequestRegister)
@@ -124,10 +124,10 @@ func (h handler) Update(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "Bearer + user token"
-// @Success 200 {object} helper.Response{data=dto.ExampleResponseDelete} "OK"
-// @Failure 400 {object} helper.Response{errors=helper.ExampleErrorResponse} "Bad Request"
-// @Failure 404 {object} helper.Response{errors=helper.ExampleErrorResponse} "Not Found"
-// @Failure 401 {object} helper.Response{errors=helper.ExampleErrorResponse} "Unauthorization"
+// @Success 200 {object} helper.Response{data=helper.Response} "OK"
+// @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Not Found"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
 // @Router /users [DELETE]
 func (h handler) Delete(ctx *gin.Context) {
 	id := ctx.MustGet("user_id")
