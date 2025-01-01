@@ -17,7 +17,7 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(input dto.RequestRegister) (dto.Response, error)
+	RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error)
 	Login(input dto.RequestLogin) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(input string) error

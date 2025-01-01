@@ -13,9 +13,9 @@ type RequestLogin struct {
 }
 
 type UserRequestUpdate struct {
-    Id    string `json:"id"`
-    Name  string `json:"name"`
-    Email string `json:"email"`
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 // Responses
@@ -23,6 +23,10 @@ type Response struct {
 	Id       uint   `json:"id,omitempty"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+}
+
+type ResponseRegister struct {
+	Id string `json:"id,omitempty"`
 }
 
 type ResponseLogin struct {

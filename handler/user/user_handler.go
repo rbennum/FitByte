@@ -44,7 +44,7 @@ func (h handler) Register(ctx *gin.Context) {
 		return
 	}
 
-	_, err = h.service.RegisterUser(*input)
+	response, err := h.service.RegisterUser(*input)
 
 	if err != nil {
 		ctx.JSON(
@@ -57,7 +57,7 @@ func (h handler) Register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, helper.NewResponse(http.StatusCreated, err))
+	ctx.JSON(http.StatusCreated, helper.NewResponse(response, err))
 }
 
 // Login user
