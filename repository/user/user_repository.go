@@ -47,13 +47,14 @@ func (r repository) Create(user entity.User, txOpt *TxOptions) error {
 		password,
 		created_at,
 		updated_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`
+	) VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	err := sql.Exec(
 		query,
 		user.Id,
 		user.Name,
 		user.Username,
+		user.Email,
 		user.Password,
 		user.UpdatedAt,
 		user.CreatedAt,
@@ -107,7 +108,7 @@ func (r repository) Update(user entity.User, txOpt *TxOptions) (entity.User, err
 		name = ?, 
 		username = ?,
 		email = ?, 
-		password = ?, 
+		password = ?
 	WHERE id = ?`
 	err := sql.Exec(
 		query,
