@@ -52,10 +52,16 @@ go run main.go
 
 ```
 docker-compose up -d
-# dengan flag -d untuk
+# Dengan flag -d untuk menjalankan container di background (detached mode).
+## Dengan menggunakan -d, terminal akan langsung kembali ke prompt tanpa menampilkan log container di terminal.
+## Container akan terus berjalan di background setelah perintah ini dijalankan.
 
-# kalau mau tambah flag --build jika ada perubahan pada Dockerfile
+# Kalau mau tambah flag --build jika ada perubahan pada Dockerfile
 docker-compose up -d --build
+## Flag --build digunakan untuk memaksa Docker Compose membangun ulang image sebelum menjalankan container.
+## Biasanya digunakan ketika ada perubahan pada Dockerfile atau file yang terkait dengan image.
+## Perintah ini akan melakukan build ulang image dan kemudian menjalankan container di background.
+
 ```
 
 # API Documentation
