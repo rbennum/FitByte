@@ -41,11 +41,11 @@ func NewUserService(
 	}
 }
 
-func (s *service) RegisterUser(input dto.RequestRegister) (dto.Response, error) {
+func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 
 	if err != nil {
-		return dto.Response{}, err
+		return dto.ResponseRegister{}, err
 	}
 
 	user := entity.User{}
@@ -57,17 +57,21 @@ func (s *service) RegisterUser(input dto.RequestRegister) (dto.Response, error) 
 	user.UpdatedAt = time.Now().Unix()
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 	if err != nil {
-		return dto.Response{}, err
+		s.logger.Error(err.Error(), helper.UserServiceRegister, err)
+		return dto.ResponseRegister{}, err
 	}
 
 	user.Password = string(passwordHash)
 
 	err = s.userRepo.Create(user, nil)
 	if err != nil {
-		return dto.Response{}, err
+		s.logger.Error(err.Error(), helper.UserServiceRegister, err)
+		return dto.ResponseRegister{}, err
 	}
-	response := dto.Response{}
-	copier.Copy(&response, &user)
+	response := dto.ResponseRegister{
+		Id: user.Id,
+	}
+
 	return response, nil
 }
 
@@ -81,11 +85,13 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 	user, err := s.userRepo.FindByEmail(email, nil)
 
 	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
 		return dto.ResponseLogin{}, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
 		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
 	}
 
@@ -94,6 +100,7 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 	token, err := jwtService.GenerateToken(user.Id)
 
 	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
 		return dto.ResponseLogin{}, err
 	}
 
@@ -110,6 +117,7 @@ func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 
 	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
 		return dto.Response{}, err
 	}
 
@@ -117,6 +125,7 @@ func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 	user.UpdatedAt = time.Now().Unix()
 	updatedUser, err := s.userRepo.Update(user, nil)
 	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
 		return dto.Response{}, err
 	}
 	response := dto.Response{}

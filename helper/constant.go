@@ -9,6 +9,11 @@ type FunctionCaller string
 const (
 	UserRepoCreate FunctionCaller = "userRepo.Create"
 	DbTrxRepoBegin FunctionCaller = "dbTrxRepo.Begin"
+
+	UserServiceRegister   FunctionCaller = "userService.RegisterUser"
+	UserServiceLogin      FunctionCaller = "userService.Login"
+	UserServiceUpdate     FunctionCaller = "userService.Update"
+	UserServiceDeleteByID FunctionCaller = "userService.DeleteById"
 )
 
 var ErrorBadRequest = errors.New("invalid request format")
