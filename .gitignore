@@ -2,3 +2,4 @@
 storage/*
 public/*
 logs/*
+.build/*
