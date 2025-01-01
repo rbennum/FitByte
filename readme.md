@@ -30,14 +30,20 @@ DEBUG_HOST=0.0.0.0
 ```
 
 # Running the App
-In go, there are two ways to run the app
+
+In Go, there are two ways to run the app
+
 ## Build
-```
-# For build, use this
-go build
+
+```go
+# For build, run this command
+go build -o .build/<name-of-build.extension>
+
+# NOTE: it is important to put the build inside of the .build folder
+# to ensure the gitignore caught up with the files
 
 # After build go application
-./go-gin-template.exe
+.build/<name-of-build.extension>
 ```
 
 ## Go Run
