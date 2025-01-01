@@ -48,6 +48,16 @@ go run main.go
 # then your operating system asking for firewall permission
 ```
 
+## On Docker
+
+```
+docker-compose up -d
+# dengan flag -d untuk
+
+# kalau mau tambah flag --build jika ada perubahan pada Dockerfile
+docker-compose up -d --build
+```
+
 # API Documentation
 One the applicatio is running, you can access the Swagger API documentation at:
 ```

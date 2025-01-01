@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  go-appl:
+    container_name: go-be-skeleton
+    image: p3t/go:runtime
+    build:
+      context: .
+      args:
+        - APP_PORT=${PORT}
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - MODE=${MODE}
+      - PROD_HOST=${PROD_HOST}
+      - DEBUG_HOST=${DEBUG_HOST}
+      - PORT=${PORT}
+    volumes:
+      - .:/app
+    restart: always
+    env_file:
+      - .env
