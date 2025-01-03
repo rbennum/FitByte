@@ -1,7 +1,7 @@
 # Dockerfile References: https://docs.docker.com/engine/reference/builder/
 
 # Start from the latest golang base image
-FROM golang:latest as builder
+FROM golang:1.23 as builder
 
 # Add Maintainer Info
 LABEL maintainer="ad1ee"
@@ -22,7 +22,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 ######## Start a new stage from scratch #######
-FROM alpine:latest  
+FROM alpine:3.21  
 
 RUN apk --no-cache add ca-certificates
 
