@@ -38,7 +38,7 @@ func (h handler) Post(ctx *gin.Context) {
 	input := new(dto.UserRequestPayload)
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
-		h.logger.Warn(err.Error(), helper.FunctionCaller("UserHandler"), &input)
+		h.logger.Warn(err.Error(), helper.FunctionCaller("UserHandler.Post"), &input)
 		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
 		return
 	}
@@ -54,7 +54,9 @@ func (h handler) Post(ctx *gin.Context) {
 			modelState["Password"] = "do not left Password emtpy"
 		}
 		if len(modelState) == 0 {
+			h.logger.Info("Register", helper.FunctionCaller("AuthHander.Post"), input)
 			response, err := h.service.RegisterUser(*input)
+			h.logger.Info("After Register", helper.FunctionCaller("AuthHander.Post"), input)
 			if err != nil {
 				ctx.JSON(
 					helper.GetErrorStatusCode(err),
@@ -68,15 +70,31 @@ func (h handler) Post(ctx *gin.Context) {
 				)
 				return
 			}
-
+			h.logger.Info("Created", helper.FunctionCaller("AuthHander.Post"), response)
 			ctx.JSON(http.StatusCreated, helper.NewResponse(response, err))
 		} else {
+			h.logger.Error("BadRequest", helper.FunctionCaller("AuthHander.Post"), modelState)
 			ctx.JSON(http.StatusBadRequest, helper.NewResponse(modelState, nil))
 		}
 
 	case dto.Login:
-		h.logger.Warn("Login method not implemented.", helper.FunctionCaller("Auth.Post"), input)
 		// do login
+		response, err := h.service.Login(*input)
+
+		if err != nil {
+			ctx.JSON(
+				helper.GetErrorStatusCode(err),
+				helper.NewResponse(
+					helper.ErrorResponse{
+						Code:    helper.GetErrorStatusCode(err),
+						Message: err.Error(),
+					},
+					err,
+				),
+			)
+			return
+		}
+		ctx.JSON(http.StatusOK, helper.Response{Data: response, Error: err})
 	}
 }
 
@@ -92,10 +110,10 @@ func (h handler) Post(ctx *gin.Context) {
 // @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Record not found"
 // @Router /v1/user/login [POST]
 func (h handler) Login(ctx *gin.Context) {
-	input := new(dto.RequestLogin)
+	input := new(dto.UserRequestPayload)
 	err := ctx.ShouldBindJSON(&input)
 	if err != nil {
-		h.logger.Warn(err.Error(), helper.FunctionCaller("Register"), input)
+		h.logger.Warn(err.Error(), helper.FunctionCaller("handle"), input)
 		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(helper.ErrorResponse{
 			Code:    http.StatusUnprocessableEntity,
 			Message: "Please verify your input",

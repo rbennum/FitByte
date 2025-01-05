@@ -28,7 +28,7 @@ func ValidateUserCreate(input dto.UserRequestPayload, r repository.UserRepositor
 	return nil
 }
 
-func ValidateUserLogin(input dto.RequestLogin) error {
+func ValidateUserLogin(input dto.UserRequestPayload) error {
 	err := validate.Struct(input)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)

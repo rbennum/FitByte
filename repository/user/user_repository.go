@@ -2,11 +2,9 @@ package repositories
 
 import (
 	"context"
-	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
-	"github.com/levensspel/go-gin-template/helper"
 )
 
 type UserRepository struct {
@@ -26,9 +24,6 @@ func (r *UserRepository) Create(ctx context.Context, user entity.User) error {
 		user.Email,    // Email yang unik
 		user.Password, // Kata sandi
 	)
-	if strings.Contains(err.Error(), "23505") {
-		return helper.ErrConflict
-	}
 	return err
 }
 func (r *UserRepository) Update(ctx context.Context, user entity.User) error {
@@ -91,7 +86,7 @@ func (r *UserRepository) GetAllUsers(ctx context.Context) ([]entity.User, error)
 
 func (r *UserRepository) GetUserbyEmail(ctx context.Context, email string) ([]entity.User, error) {
 	// Menggunakan Query bukan Exec karena kita mengambil hasil dari SELECT
-	query := `SELECT u.id, u.name, u.username, u.email, u.password FROM users u WHERE email = $1`
+	query := `SELECT u.id, u.name, u.email, u.password FROM users u WHERE email = $1`
 	rows, err := r.db.Query(ctx, query, email)
 	if err != nil {
 		return nil, err
@@ -102,7 +97,7 @@ func (r *UserRepository) GetUserbyEmail(ctx context.Context, email string) ([]en
 	for rows.Next() {
 		var user entity.User
 		// Menyimpan data hasil query ke dalam struct user
-		if err := rows.Scan(&user.Id, &user.Name, &user.Username, &user.Email, &user.Password); err != nil {
+		if err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password); err != nil {
 			return nil, err
 		}
 		users = append(users, user)

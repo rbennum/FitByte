@@ -2,6 +2,7 @@ package user_service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,7 +18,7 @@ import (
 
 type UserService interface {
 	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
-	Login(input dto.RequestLogin) (dto.ResponseLogin, error)
+	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
 }
@@ -59,35 +60,45 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 	}
 	user.Password = string(passwordHash)
 
+	s.logger.Info("Create", helper.FunctionCaller("UserService.RegisterUser"), user)
 	err = s.userRepo.Create(context.Background(), user)
+	s.logger.Info("Created", helper.FunctionCaller("UserService.RegisterUser"), user)
+
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceRegister, user)
-		return dto.ResponseRegister{}, err
+		if strings.Contains(err.Error(), "23505") {
+			return dto.ResponseRegister{}, helper.ErrConflict
+		} else {
+			s.logger.Error(err.Error(), helper.UserServiceRegister, user)
+			return dto.ResponseRegister{}, err
+		}
 	}
+
 	response := dto.ResponseRegister{
-		Id: user.Id,
+		Email: user.Email,
+		Token: user.Id,
 	}
+	s.logger.Info("Created", helper.FunctionCaller("UserService.RegisterUser"), response)
 
 	return response, nil
 }
 
-func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
+func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
 	err := validation.ValidateUserLogin(input)
 	if err != nil {
 		return dto.ResponseLogin{}, err
 	}
-	s.logger.Info("Finding user account by email", helper.FunctionCaller("UserService.Login"), input)
+
+	//get user
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceLogin, input)
 		return dto.ResponseLogin{}, err
 	}
-	s.logger.Info("Found available user", helper.FunctionCaller("UserService.Login"), user)
-
 	if len(user) == 0 {
-		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
+		return dto.ResponseLogin{}, helper.ErrNotFound
 	}
 
+	// password compared
 	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), []byte(input.Password))
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
@@ -95,7 +106,6 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 	}
 
 	jwtService := auth.NewJWTService()
-
 	token, err := jwtService.GenerateToken(user[0].Id)
 
 	if err != nil {

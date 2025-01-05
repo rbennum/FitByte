@@ -59,7 +59,7 @@ const docTemplate = `{
                         }
                     },
                     "201": {
-                        "description": "201 CREATED",
+                        "description": "CREATED",
                         "schema": {
                             "allOf": [
                                 {
@@ -385,6 +385,9 @@ const docTemplate = `{
         "dto.ResponseLogin": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "token": {
                     "type": "string"
                 }

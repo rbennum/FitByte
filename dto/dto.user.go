@@ -37,9 +37,11 @@ type Response struct {
 }
 
 type ResponseRegister struct {
-	Id string `json:"id,omitempty"`
+	Email string `json:"email"`
+	Token string `json:"token"`
 }
 
 type ResponseLogin struct {
+	Email string `json:"email"`
 	Token string `json:"token"`
 }

@@ -20,7 +20,7 @@ func NewJWTService() *jwtService {
 	return &jwtService{}
 }
 
-const ENV_PATH = "../../.env"
+const ENV_PATH = ".env"
 
 var _ = godotenv.Load(ENV_PATH)
 var SECRET_KEY = os.Getenv("JWT_SECRET_KEY")

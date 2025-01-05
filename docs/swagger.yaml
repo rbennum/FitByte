@@ -12,6 +12,8 @@ definitions:
     type: object
   dto.ResponseLogin:
     properties:
+      email:
+        type: string
       token:
         type: string
     type: object
@@ -78,7 +80,7 @@ paths:
                   $ref: '#/definitions/helper.Response'
               type: object
         "201":
-          description: 201 CREATED
+          description: CREATED
           schema:
             allOf:
             - $ref: '#/definitions/helper.Response'
