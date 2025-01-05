@@ -4,86 +4,41 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
-	"github.com/levensspel/go-gin-template/entity"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	"github.com/joho/godotenv"
 )
 
-func NewDbInit() (*gorm.DB, error) {
-	dsn := newConfig().GetDsn()
-	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
-		logger.Config{
-			SlowThreshold:             time.Second,
-			LogLevel:                  logger.Silent,
-			IgnoreRecordNotFoundError: true,
-			Colorful:                  false,
-		},
-	)
+type Config struct {
+	DatabaseURL string
+	Port        string
+}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger,
-	})
-
+func LoadConfig() *Config {
+	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("ini error: ", err)
-		return nil, err
+		log.Println("No .env file found, using environment variables")
 	}
 
-	err = db.AutoMigrate(
-		entity.User{},
+	dbUser := getEnv("POSTGRES_USER", "postgres")
+	dbPassword := getEnv("POSTGRES_PASSWORD", "")
+	dbHost := getEnv("POSTGRES_HOST", "localhost")
+	dbPort := getEnv("POSTGRES_PORT", "5432")
+	dbName := getEnv("POSTGRES_DB", "postgres")
+	port := getEnv("POSTGRES_PORT", "8080")
+
+	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+		dbUser, dbPassword, dbHost, dbPort, dbName,
 	)
 
-	return db, err
-}
-
-type dbConfig struct {
-	Host     string
-	Port     string
-	User     string
-	DbName   string
-	Password string
-}
-
-func newConfig() *dbConfig {
-	config := dbConfig{
-		Host:     os.Getenv("DB_HOST"),
-		Port:     os.Getenv("DB_PORT"),
-		DbName:   os.Getenv("DB_NAME"),
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
+	return &Config{
+		DatabaseURL: databaseURL,
+		Port:        port,
 	}
-
-	return &config
 }
 
-func (dbConfig *dbConfig) GetDsn() string {
-
-	mode := os.Getenv("MODE")
-	var dsn string
-
-	if mode == "production" {
-		dsn = fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=Asia/Jakarta",
-			dbConfig.Host,
-			dbConfig.User,
-			dbConfig.Password,
-			dbConfig.DbName,
-			dbConfig.Port,
-		)
-	} else {
-		dsn = fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Jakarta",
-			dbConfig.Host,
-			dbConfig.User,
-			dbConfig.Password,
-			dbConfig.DbName,
-			dbConfig.Port,
-		)
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
 	}
-
-	return dsn
+	return fallback
 }

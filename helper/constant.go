@@ -14,6 +14,10 @@ const (
 	UserServiceLogin      FunctionCaller = "userService.Login"
 	UserServiceUpdate     FunctionCaller = "userService.Update"
 	UserServiceDeleteByID FunctionCaller = "userService.DeleteById"
+
+	GenerateFromPassword FunctionCaller = "GenerateFromPassword"
+
+	UserHandler FunctionCaller = "UserHandler"
 )
 
 var ErrorBadRequest = errors.New("invalid request format")

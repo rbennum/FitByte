@@ -55,7 +55,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /users:
+  /api/users:
     delete:
       consumes:
       - application/json
@@ -157,7 +157,7 @@ paths:
       summary: Update user
       tags:
       - users
-  /users/login:
+  /api/users/login:
     post:
       consumes:
       - application/json
@@ -202,7 +202,7 @@ paths:
       summary: Login user
       tags:
       - users
-  /users/register:
+  /api/users/register:
     post:
       consumes:
       - application/json

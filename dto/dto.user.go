@@ -20,7 +20,7 @@ type UserRequestUpdate struct {
 
 // Responses
 type Response struct {
-	Id       uint   `json:"id,omitempty"`
+	Id       string `json:"id,omitempty"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }

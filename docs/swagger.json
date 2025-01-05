@@ -4,7 +4,7 @@
         "contact": {}
     },
     "paths": {
-        "/users": {
+        "/api/users": {
             "put": {
                 "description": "Update user",
                 "consumes": [
@@ -189,7 +189,7 @@
                 }
             }
         },
-        "/users/login": {
+        "/api/users/login": {
             "post": {
                 "description": "Login user",
                 "consumes": [
@@ -271,7 +271,7 @@
                 }
             }
         },
-        "/users/register": {
+        "/api/users/register": {
             "post": {
                 "description": "Register the new user",
                 "consumes": [

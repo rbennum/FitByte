@@ -7,12 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/levensspel/go-gin-template/config"
+	dbcontext "github.com/levensspel/go-gin-template/database"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/middleware"
 )
 
 func Start() error {
-	db, err := config.NewDbInit()
+	config := config.LoadConfig()
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -23,7 +24,7 @@ func Start() error {
 	r := gin.Default()
 	r.Use(middleware.EnableCORS)
 
-	NewRouter(r, db)
+	NewRouter(r, dbcontext.Connect(config.DatabaseURL))
 
 	r.Use(gin.Recovery())
 
@@ -45,7 +46,7 @@ func Start() error {
 		if sslCert == "" || sslKey == "" {
 			log.Fatal("SSL certificates not configured")
 		}
-		
+
 		host := os.Getenv("PROD_HOST")
 		err := r.RunTLS(
 			fmt.Sprintf("%s:%s", host, port),

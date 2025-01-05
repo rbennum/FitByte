@@ -1,17 +1,16 @@
 package user_service
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/levensspel/go-gin-template/auth"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/entity"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
-	dbTrxRepository "github.com/levensspel/go-gin-template/repository/db_trx"
-	userRepository "github.com/levensspel/go-gin-template/repository/user"
+	repositories "github.com/levensspel/go-gin-template/repository/user"
 	"github.com/levensspel/go-gin-template/validation"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,24 +19,21 @@ type UserService interface {
 	RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error)
 	Login(input dto.RequestLogin) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
-	DeleteByID(input string) error
+	DeleteByID(id string) error
 }
 
 type service struct {
-	userRepo  userRepository.UserRepository
-	dbTrxRepo dbTrxRepository.DBTrxRepository
-	logger    logger.Logger
+	userRepo repositories.UserRepository
+	logger   logger.Logger
 }
 
 func NewUserService(
-	userRepo userRepository.UserRepository,
-	dbTrxRepo dbTrxRepository.DBTrxRepository,
+	userRepo repositories.UserRepository,
 	logger logger.Logger,
 ) UserService {
 	return &service{
-		userRepo:  userRepo,
-		dbTrxRepo: dbTrxRepo,
-		logger:    logger,
+		userRepo: userRepo,
+		logger:   logger,
 	}
 }
 
@@ -55,17 +51,18 @@ func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister,
 	user.Email = input.Email
 	user.CreatedAt = time.Now().Unix()
 	user.UpdatedAt = time.Now().Unix()
+
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
+
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceRegister, err)
+		s.logger.Error(err.Error(), helper.GenerateFromPassword, passwordHash)
 		return dto.ResponseRegister{}, err
 	}
-
 	user.Password = string(passwordHash)
 
-	err = s.userRepo.Create(user, nil)
+	err = s.userRepo.Create(context.Background(), user)
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceRegister, err)
+		s.logger.Error(err.Error(), helper.UserServiceRegister, user)
 		return dto.ResponseRegister{}, err
 	}
 	response := dto.ResponseRegister{
@@ -80,16 +77,19 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 	if err != nil {
 		return dto.ResponseLogin{}, err
 	}
-	email := input.Email
-	password := input.Password
-	user, err := s.userRepo.FindByEmail(email, nil)
-
+	s.logger.Info("Finding user account by email", helper.FunctionCaller("UserService.Login"), input)
+	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
+		s.logger.Error(err.Error(), helper.UserServiceLogin, input)
 		return dto.ResponseLogin{}, err
 	}
+	s.logger.Info("Found available user", helper.FunctionCaller("UserService.Login"), user)
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if len(user) == 0 {
+		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), []byte(input.Password))
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
 		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
@@ -97,7 +97,7 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 
 	jwtService := auth.NewJWTService()
 
-	token, err := jwtService.GenerateToken(user.Id)
+	token, err := jwtService.GenerateToken(user[0].Id)
 
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
@@ -123,17 +123,24 @@ func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 
 	user.Password = string(passwordHash)
 	user.UpdatedAt = time.Now().Unix()
-	updatedUser, err := s.userRepo.Update(user, nil)
+	err = s.userRepo.Update(context.Background(), user)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
 		return dto.Response{}, err
 	}
 	response := dto.Response{}
-	copier.Copy(&response, &updatedUser)
+	response.Id = input.Id
+	response.Email = input.Email
+	response.Username = input.Username
 
 	return response, nil
 }
 
 func (s *service) DeleteByID(id string) error {
-	return s.userRepo.DeleteByID(id, nil)
+	err := s.userRepo.Delete(context.Background(), id)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
+		return err
+	}
+	return err
 }
