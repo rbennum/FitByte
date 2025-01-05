@@ -16,7 +16,7 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error)
+	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
 	Login(input dto.RequestLogin) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
@@ -37,7 +37,7 @@ func NewUserService(
 	}
 }
 
-func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error) {
+func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 
 	if err != nil {
@@ -47,7 +47,6 @@ func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister,
 	user := entity.User{}
 
 	user.Id = uuid.New().String()
-	user.Username = input.Username
 	user.Email = input.Email
 	user.CreatedAt = time.Now().Unix()
 	user.UpdatedAt = time.Now().Unix()

@@ -2,9 +2,11 @@ package repositories
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
+	"github.com/levensspel/go-gin-template/helper"
 )
 
 type UserRepository struct {
@@ -17,15 +19,16 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user entity.User) error {
 	query := `
-		INSERT INTO users (name, username, email, password)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (email, password)
+		VALUES ($1, $2)
 	`
 	_, err := r.db.Exec(ctx, query,
-		user.Name,     // Nama pengguna
-		user.Username, // Username yang unik
 		user.Email,    // Email yang unik
 		user.Password, // Kata sandi
 	)
+	if strings.Contains(err.Error(), "23505") {
+		return helper.ErrConflict
+	}
 	return err
 }
 func (r *UserRepository) Update(ctx context.Context, user entity.User) error {

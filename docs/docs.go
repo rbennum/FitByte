@@ -15,7 +15,89 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/users": {
+        "/v1/auth": {
+            "post": {
+                "description": "either create or login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Entry for authentication or create new user",
+                "parameters": [
+                    {
+                        "description": "data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserRequestPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "EXISTING",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/helper.Response"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "201": {
+                        "description": "201 CREATED",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/helper.Response"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/definitions/helper.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user": {
             "put": {
                 "description": "Update user",
                 "consumes": [
@@ -200,7 +282,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/users/login": {
+        "/v1/user/login": {
             "post": {
                 "description": "Login user",
                 "consumes": [
@@ -281,88 +363,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/api/users/register": {
-            "post": {
-                "description": "Register the new user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Register new user",
-                "parameters": [
-                    {
-                        "description": "data",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RequestRegister"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "CREATED",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/helper.Response"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "data conflict, like email already exist",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -382,34 +382,31 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RequestRegister": {
-            "type": "object",
-            "required": [
-                "email",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.ResponseLogin": {
             "type": "object",
             "properties": {
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.UserRequestPayload": {
+            "type": "object",
+            "required": [
+                "action",
+                "email",
+                "password"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         },

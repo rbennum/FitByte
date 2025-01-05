@@ -8,7 +8,7 @@ import (
 
 var validate = validator.New()
 
-func ValidateUserCreate(input dto.RequestRegister, r repository.UserRepository) error {
+func ValidateUserCreate(input dto.UserRequestPayload, r repository.UserRepository) error {
 	err := validate.Struct(input)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
