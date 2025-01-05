@@ -68,6 +68,8 @@ docker-compose up -d --build
 ## Biasanya digunakan ketika ada perubahan pada Dockerfile atau file yang terkait dengan image.
 ## Perintah ini akan melakukan build ulang image dan kemudian menjalankan container di background.
 
+# Jika ingin menggunakan container database postgres di local bisa menggunakan argument berikut: --profile local
+contoh: docker compose --profile local up -d --build
 ```
 
 # API Documentation
