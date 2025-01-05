@@ -77,7 +77,6 @@ func (h handler) Post(ctx *gin.Context) {
 			h.logger.Error("BadRequest", helper.FunctionCaller("AuthHander.Post"), modelState)
 			ctx.JSON(http.StatusBadRequest, helper.NewResponse(modelState, nil))
 		}
-
 	case dto.Login:
 		// do login
 		response, err := h.service.Login(*input)
@@ -96,36 +95,16 @@ func (h handler) Post(ctx *gin.Context) {
 			return
 		}
 		ctx.JSON(http.StatusOK, helper.Response{Data: response, Error: err})
+	default:
+		ctx.JSON(
+			http.StatusBadRequest,
+			helper.NewResponse(
+				helper.ErrorResponse{
+					Code:    http.StatusBadRequest,
+					Message: "Action not found",
+				},
+				nil,
+			),
+		)
 	}
-}
-
-// Login user
-// @Tags users
-// @Summary Login user
-// @Description Login user
-// @Accept  json
-// @Produce  json
-// @Param data body dto.RequestLogin true "data"
-// @Success 200 {object} helper.Response{data=dto.ResponseLogin} "OK"
-// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
-// @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Record not found"
-// @Router /v1/user/login [POST]
-func (h handler) Login(ctx *gin.Context) {
-	input := new(dto.UserRequestPayload)
-	err := ctx.ShouldBindJSON(&input)
-	if err != nil {
-		h.logger.Warn(err.Error(), helper.FunctionCaller("handle"), input)
-		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(helper.ErrorResponse{
-			Code:    http.StatusUnprocessableEntity,
-			Message: "Please verify your input",
-		}, err))
-		return
-	}
-	response, err := h.service.Login(*input)
-
-	if err != nil {
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
-		return
-	}
-	ctx.JSON(http.StatusOK, helper.Response{Data: response, Error: err})
 }
