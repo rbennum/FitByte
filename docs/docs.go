@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users": {
+        "/api/users": {
             "put": {
                 "description": "Update user",
                 "consumes": [
@@ -200,7 +200,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/login": {
+        "/api/users/login": {
             "post": {
                 "description": "Login user",
                 "consumes": [
@@ -282,7 +282,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register": {
+        "/api/users/register": {
             "post": {
                 "description": "Register the new user",
                 "consumes": [
@@ -450,12 +450,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "0.0.1",
+	Version:          "",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Suwager",
-	Description:      "API Dokumentasi untuk PS-3-T",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

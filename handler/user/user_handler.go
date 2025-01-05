@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
+	"github.com/levensspel/go-gin-template/logger"
 	service "github.com/levensspel/go-gin-template/service/user"
 )
 
@@ -18,10 +19,11 @@ type UserHandler interface {
 
 type handler struct {
 	service service.UserService
+	logger  logger.Logger
 }
 
-func NewUserHandler(service service.UserService) UserHandler {
-	return &handler{service: service}
+func NewUserHandler(service service.UserService, logger logger.Logger) UserHandler {
+	return &handler{service: service, logger: logger}
 }
 
 // Register new user
@@ -34,14 +36,29 @@ func NewUserHandler(service service.UserService) UserHandler {
 // @Success 201 {object} helper.Response{data=helper.Response} "CREATED"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 409 {object} helper.Response{errors=helper.ErrorResponse} "data conflict, like email already exist"
-// @Router /users/register [POST]
+// @Router /api/users/register [POST]
 func (h handler) Register(ctx *gin.Context) {
 	input := new(dto.RequestRegister)
 
-	err := ctx.ShouldBindJSON(&input)
-	if err != nil {
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		h.logger.Warn(err.Error(), helper.FunctionCaller("Register"), input)
 		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
 		return
+	}
+
+	modelState := make(map[string]string)
+	if input.Email == "" {
+		modelState["Email"] = "do not left Email empty"
+	}
+	if input.Username == "" {
+		modelState["Username"] = "do not left Username empty"
+	}
+	if input.Password == "" {
+		modelState["Password"] = "do not left Password emtpy"
+	}
+
+	if len(modelState) != 0 {
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(modelState, nil))
 	}
 
 	response, err := h.service.RegisterUser(*input)
@@ -50,8 +67,11 @@ func (h handler) Register(ctx *gin.Context) {
 		ctx.JSON(
 			helper.GetErrorStatusCode(err),
 			helper.NewResponse(
-				helper.GetErrorStatusCode(err),
-				nil,
+				helper.ErrorResponse{
+					Code:    helper.GetErrorStatusCode(err),
+					Message: "Either username, email, or choosen password has been selected",
+				},
+				err,
 			),
 		)
 		return
@@ -70,12 +90,16 @@ func (h handler) Register(ctx *gin.Context) {
 // @Success 200 {object} helper.Response{data=dto.ResponseLogin} "OK"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Record not found"
-// @Router /users/login [POST]
+// @Router /api/users/login [POST]
 func (h handler) Login(ctx *gin.Context) {
 	input := new(dto.RequestLogin)
 	err := ctx.ShouldBindJSON(&input)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
+		h.logger.Warn(err.Error(), helper.FunctionCaller("Register"), input)
+		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(helper.ErrorResponse{
+			Code:    http.StatusUnprocessableEntity,
+			Message: "Please verify your input",
+		}, err))
 		return
 	}
 	response, err := h.service.Login(*input)
@@ -98,7 +122,7 @@ func (h handler) Login(ctx *gin.Context) {
 // @Success 200 {object} helper.Response{data=helper.Response} "OK"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
-// @Router /users [PUT]
+// @Router /api/users [PUT]
 func (h handler) Update(ctx *gin.Context) {
 	input := new(dto.RequestRegister)
 
@@ -128,7 +152,7 @@ func (h handler) Update(ctx *gin.Context) {
 // @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Not Found"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
-// @Router /users [DELETE]
+// @Router /api/users [DELETE]
 func (h handler) Delete(ctx *gin.Context) {
 	id := ctx.MustGet("user_id")
 
