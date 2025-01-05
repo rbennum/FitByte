@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	authHandler "github.com/levensspel/go-gin-template/handler/auth"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
@@ -25,6 +26,7 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	userRepo := repositories.NewUserRepository(db)
 	userService := userService.NewUserService(userRepo, logger)
 	userHdlr := userHandler.NewUserHandler(userService, logger)
+	authHandler := authHandler.NewHandler(userService, logger)
 
 	swaggerRoute := r.Group("/")
 	{
@@ -32,12 +34,15 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 		swaggerRoute.GET("swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	controllers := r.Group("/api")
+	controllers := r.Group("/v1")
 	{
-		user := controllers.Group("/users")
+		auth := controllers.Group("/auth")
 		{
-			user.POST("/register", userHdlr.Register)
-			user.POST("/login", userHdlr.Login)
+			auth.POST("", authHandler.Post)
+		}
+
+		user := controllers.Group("/user")
+		{
 			user.PUT("", middleware.Authorization, userHdlr.Update)
 			user.DELETE("", middleware.Authorization, userHdlr.Delete)
 		}

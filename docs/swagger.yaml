@@ -10,26 +10,26 @@ definitions:
     - email
     - password
     type: object
-  dto.RequestRegister:
+  dto.ResponseLogin:
     properties:
       email:
         type: string
-      id:
+      token:
+        type: string
+    type: object
+  dto.UserRequestPayload:
+    properties:
+      action:
+        type: string
+      email:
         type: string
       password:
         minLength: 8
         type: string
-      username:
-        type: string
     required:
+    - action
     - email
     - password
-    - username
-    type: object
-  dto.ResponseLogin:
-    properties:
-      token:
-        type: string
     type: object
   dto.UserRequestUpdate:
     properties:
@@ -55,7 +55,52 @@ definitions:
 info:
   contact: {}
 paths:
-  /api/users:
+  /v1/auth:
+    post:
+      consumes:
+      - application/json
+      description: either create or login
+      parameters:
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRequestPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: EXISTING
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "201":
+          description: CREATED
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Entry for authentication or create new user
+      tags:
+      - auth
+  /v1/user:
     delete:
       consumes:
       - application/json
@@ -157,7 +202,7 @@ paths:
       summary: Update user
       tags:
       - users
-  /api/users/login:
+  /v1/user/login:
     post:
       consumes:
       - application/json
@@ -200,51 +245,6 @@ paths:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
       summary: Login user
-      tags:
-      - users
-  /api/users/register:
-    post:
-      consumes:
-      - application/json
-      description: Register the new user
-      parameters:
-      - description: data
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/dto.RequestRegister'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: CREATED
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/helper.Response'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                errors:
-                  $ref: '#/definitions/helper.ErrorResponse'
-              type: object
-        "409":
-          description: data conflict, like email already exist
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                errors:
-                  $ref: '#/definitions/helper.ErrorResponse'
-              type: object
-      summary: Register new user
       tags:
       - users
 swagger: "2.0"

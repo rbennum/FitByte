@@ -2,6 +2,7 @@ package user_service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,8 +17,8 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error)
-	Login(input dto.RequestLogin) (dto.ResponseLogin, error)
+	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
+	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
 }
@@ -37,7 +38,7 @@ func NewUserService(
 	}
 }
 
-func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister, error) {
+func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 
 	if err != nil {
@@ -47,7 +48,6 @@ func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister,
 	user := entity.User{}
 
 	user.Id = uuid.New().String()
-	user.Username = input.Username
 	user.Email = input.Email
 	user.CreatedAt = time.Now().Unix()
 	user.UpdatedAt = time.Now().Unix()
@@ -61,42 +61,48 @@ func (s *service) RegisterUser(input dto.RequestRegister) (dto.ResponseRegister,
 	user.Password = string(passwordHash)
 
 	err = s.userRepo.Create(context.Background(), user)
+
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceRegister, user)
-		return dto.ResponseRegister{}, err
+		if strings.Contains(err.Error(), "23505") {
+			return dto.ResponseRegister{}, helper.ErrConflict
+		} else {
+			s.logger.Error(err.Error(), helper.UserServiceRegister, user)
+			return dto.ResponseRegister{}, err
+		}
 	}
+
 	response := dto.ResponseRegister{
-		Id: user.Id,
+		Email: user.Email,
+		Token: user.Id,
 	}
 
 	return response, nil
 }
 
-func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
+func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
 	err := validation.ValidateUserLogin(input)
 	if err != nil {
 		return dto.ResponseLogin{}, err
 	}
-	s.logger.Info("Finding user account by email", helper.FunctionCaller("UserService.Login"), input)
+
+	//get user
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceLogin, input)
+		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.GetUserbyEmail"), input)
 		return dto.ResponseLogin{}, err
 	}
-	s.logger.Info("Found available user", helper.FunctionCaller("UserService.Login"), user)
-
 	if len(user) == 0 {
-		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
+		return dto.ResponseLogin{}, helper.ErrNotFound
 	}
 
+	// password compared
 	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), []byte(input.Password))
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
+		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.CompareHashAndPassword"), err)
 		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
 	}
 
 	jwtService := auth.NewJWTService()
-
 	token, err := jwtService.GenerateToken(user[0].Id)
 
 	if err != nil {
@@ -105,6 +111,7 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 	}
 
 	response := dto.ResponseLogin{}
+	response.Email = user[0].Email
 	response.Token = token
 	return response, nil
 }
@@ -112,7 +119,7 @@ func (s *service) Login(input dto.RequestLogin) (dto.ResponseLogin, error) {
 func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 	user := entity.User{}
 	user.Id = input.Id
-	user.Username = input.Username
+	user.Username.String = input.Username
 	user.Email = input.Email
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 
