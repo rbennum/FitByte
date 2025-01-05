@@ -24,7 +24,7 @@ func LoadConfig() *Config {
 	dbHost := getEnv("POSTGRES_HOST", "localhost")
 	dbPort := getEnv("POSTGRES_PORT", "5432")
 	dbName := getEnv("POSTGRES_DB", "postgres")
-	port := getEnv("POSTGRES_PORT", "8080")
+	port := getEnv("PORT", "8080")
 
 	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
 		dbUser, dbPassword, dbHost, dbPort, dbName,

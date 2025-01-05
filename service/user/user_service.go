@@ -60,9 +60,7 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 	}
 	user.Password = string(passwordHash)
 
-	s.logger.Info("Create", helper.FunctionCaller("UserService.RegisterUser"), user)
 	err = s.userRepo.Create(context.Background(), user)
-	s.logger.Info("Created", helper.FunctionCaller("UserService.RegisterUser"), user)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "23505") {
@@ -77,7 +75,6 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 		Email: user.Email,
 		Token: user.Id,
 	}
-	s.logger.Info("Created", helper.FunctionCaller("UserService.RegisterUser"), response)
 
 	return response, nil
 }
@@ -91,7 +88,7 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	//get user
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceLogin, input)
+		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.GetUserbyEmail"), input)
 		return dto.ResponseLogin{}, err
 	}
 	if len(user) == 0 {
@@ -101,7 +98,7 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	// password compared
 	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), []byte(input.Password))
 	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceLogin, err)
+		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.CompareHashAndPassword"), err)
 		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
 	}
 
@@ -114,6 +111,7 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	}
 
 	response := dto.ResponseLogin{}
+	response.Email = user[0].Email
 	response.Token = token
 	return response, nil
 }
@@ -121,7 +119,7 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 	user := entity.User{}
 	user.Id = input.Id
-	user.Username = input.Username
+	user.Username.String = input.Username
 	user.Email = input.Email
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 

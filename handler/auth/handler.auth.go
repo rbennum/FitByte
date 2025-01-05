@@ -2,6 +2,7 @@ package authHandler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/levensspel/go-gin-template/dto"
@@ -38,12 +39,12 @@ func (h handler) Post(ctx *gin.Context) {
 	input := new(dto.UserRequestPayload)
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
-		h.logger.Warn(err.Error(), helper.FunctionCaller("UserHandler.Post"), &input)
+		h.logger.Warn(err.Error(), helper.FunctionCaller("AuthHandler.Post"), &input)
 		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
 		return
 	}
 
-	switch input.Action {
+	switch strings.ToLower(input.Action) {
 	case dto.Create:
 		// do register/create new user
 		modelState := make(map[string]string)
