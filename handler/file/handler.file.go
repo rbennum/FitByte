@@ -7,7 +7,7 @@ import (
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
-	service "github.com/levensspel/go-gin-template/service/user"
+	fileService "github.com/levensspel/go-gin-template/service/file"
 )
 
 type FileHandler interface {
@@ -15,24 +15,25 @@ type FileHandler interface {
 }
 
 type handler struct {
-	service service.UserService
+	service fileService.FileService
 	logger  logger.Logger
 }
 
-func NewUserHandler(service service.UserService, logger logger.Logger) FileHandler {
+func NewHandler(service fileService.FileService, logger logger.Logger) FileHandler {
 	return &handler{service: service, logger: logger}
 }
 
 // Upload godoc
-// @Tags auth
-// @Summary Entry for authentication or create new user
-// @Description Either create or login
+// @Tags file
+// @Summary Upload an file
+// @Description Upload an file
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer JWT token"
-// @Param data body dto.FileUploadRequestPayload true "File upload data"
-// @Success 200 {object} helper.Response{data=helper.FileUploadRespondPayload} "File uploaded successfully"
-// @Success 201 {object} helper.Response{data=helper.FileUploadRespondPayload} "File created successfully"
+// @Param File formData file true "Body with file zip"
+// @Param FileType body string true "Body with file zip"
+// @Success 200 {object} helper.Response{data=dto.FileUploadRespondPayload} "File uploaded successfully"
+// @Success 201 {object} helper.Response{data=dto.FileUploadRespondPayload} "File created successfully"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 415 {object} helper.Response{errors=helper.ErrorResponse} "Unsupported Media Type"
 // @Failure 413 {object} helper.Response{errors=helper.ErrorResponse} "Payload Too Large"

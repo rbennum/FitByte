@@ -1,4 +1,4 @@
-package services
+package fileService
 
 import (
 	"github.com/levensspel/go-gin-template/dto"

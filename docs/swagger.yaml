@@ -1,4 +1,9 @@
 definitions:
+  dto.FileUploadRespondPayload:
+    properties:
+      uri:
+        type: string
+    type: object
   dto.UserRequestPayload:
     properties:
       action:
@@ -72,6 +77,88 @@ paths:
               type: object
         "400":
           description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Entry for authentication or create new user
+      tags:
+      - auth
+  /v1/file:
+    post:
+      consumes:
+      - application/json
+      description: Either create or login
+      parameters:
+      - description: Bearer JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body with file zip
+        in: formData
+        name: File
+        required: true
+        type: file
+      - description: Body with file zip
+        in: body
+        name: FileType
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: File uploaded successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.FileUploadRespondPayload'
+              type: object
+        "201":
+          description: File created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.FileUploadRespondPayload'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "401":
+          description: Unauthorized - Missing or invalid token
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "413":
+          description: Payload Too Large
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "415":
+          description: Unsupported Media Type
           schema:
             allOf:
             - $ref: '#/definitions/helper.Response'
