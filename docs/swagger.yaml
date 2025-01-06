@@ -1,22 +1,4 @@
 definitions:
-  dto.RequestLogin:
-    properties:
-      email:
-        type: string
-      password:
-        minLength: 8
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  dto.ResponseLogin:
-    properties:
-      email:
-        type: string
-      token:
-        type: string
-    type: object
   dto.UserRequestPayload:
     properties:
       action:
@@ -200,51 +182,6 @@ paths:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
       summary: Update user
-      tags:
-      - users
-  /v1/user/login:
-    post:
-      consumes:
-      - application/json
-      description: Login user
-      parameters:
-      - description: data
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/dto.RequestLogin'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ResponseLogin'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                errors:
-                  $ref: '#/definitions/helper.ErrorResponse'
-              type: object
-        "404":
-          description: Record not found
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                errors:
-                  $ref: '#/definitions/helper.ErrorResponse'
-              type: object
-      summary: Login user
       tags:
       - users
 swagger: "2.0"
