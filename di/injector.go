@@ -19,6 +19,6 @@ func init() {
 	if envMode == "DEBUG" {
 		do.Provide[domain.StorageClient](Injector, storage.NewMockStorageClientInject)
 	} else {
-		do.Provide[domain.StorageClient](Injector, storage.NewS3ClientInject)
+		do.Provide[domain.StorageClient](Injector, storage.NewS3StorageClientInject)
 	}
 }
