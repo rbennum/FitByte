@@ -118,3 +118,20 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.Query(ctx, query, id)
 	return err
 }
+
+func (r *UserRepository) GetProfile(ctx context.Context, id string) (*entity.GetProfile, error) {
+	row := r.db.QueryRow(
+		ctx,
+		`SELECT email, name, userImageUri, companyName, companyImageUri FROM users WHERE identitynumber = $1`,
+		id,
+	)
+
+	var user entity.GetProfile
+	err := row.Scan(&user.Email, &user.Name, &user.UserImageUri, &user.CompanyName, &user.CompanyImageUri)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+
+}

@@ -21,3 +21,11 @@ type UserTransactDB struct {
 	UpdatedAt int64          `json:"updated_at"`
 	CreatedAt int64          `json:"created_at"`
 }
+
+type GetProfile struct {
+	Email           string `json:"email"`
+	Name            string `json:"name"`
+	UserImageUri    string `json:"userImageUri"`
+	CompanyName     string `json:"companyName"`
+	CompanyImageUri string `json:"companyImageUri"`
+}
