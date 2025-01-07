@@ -10,12 +10,26 @@ import (
 )
 
 func main() {
-	health := di.Injector.HealthCheck()
-	fmt.Println("DI HealthCheck: %v\n", health)
+	healthCheckDI()
 
 	err := server.Start()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+}
+
+func healthCheckDI() {
+	health := di.Injector.HealthCheck()
+	fmt.Printf("DI HealthCheck: %v\n", health)
+	isHealthy := true
+	for service, err := range health {
+		if err != nil {
+			fmt.Printf("Service %s is unhealthy: %v\n", service, err)
+			isHealthy = false
+		}
+	}
+	if !isHealthy {
+		panic("DI is not healthy")
+	}
 }

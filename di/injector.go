@@ -16,7 +16,7 @@ func init() {
 
 	// Setup client
 	envMode := os.Getenv("MODE")
-	if envMode == "LOCAL" {
+	if envMode == "DEBUG" {
 		do.Provide[domain.StorageClient](Injector, storage.NewMockStorageClientInject)
 	} else {
 		do.Provide[domain.StorageClient](Injector, storage.NewS3ClientInject)
