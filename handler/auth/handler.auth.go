@@ -1,6 +1,7 @@
 package authHandler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -79,6 +80,7 @@ func (h handler) Post(ctx *gin.Context) {
 		}
 	case dto.Login:
 		// do login
+		fmt.Printf("input %s", *input)
 		response, err := h.service.Login(*input)
 
 		if err != nil {

@@ -2,17 +2,20 @@ package userService
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/levensspel/go-gin-template/auth"
+	"github.com/levensspel/go-gin-template/di"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/entity"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/user"
 	"github.com/levensspel/go-gin-template/validation"
+	"github.com/samber/do/v2"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,8 +36,9 @@ func NewUserService(
 	userRepo repositories.UserRepository,
 	logger logger.Logger,
 ) UserService {
+	_userRepo := do.MustInvoke[repositories.UserRepository](di.Injector)
 	return &service{
-		userRepo: userRepo,
+		userRepo: _userRepo,
 		logger:   logger,
 	}
 }
@@ -87,6 +91,7 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	}
 
 	//get user
+	fmt.Printf("email %s", input.Email)
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.GetUserbyEmail"), input)
