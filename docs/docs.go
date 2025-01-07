@@ -99,7 +99,7 @@ const docTemplate = `{
         },
         "/v1/file": {
             "post": {
-                "description": "Either create or login",
+                "description": "Upload an file",
                 "consumes": [
                     "application/json"
                 ],
@@ -107,9 +107,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "file"
                 ],
-                "summary": "Entry for authentication or create new user",
+                "summary": "Upload an file",
                 "parameters": [
                     {
                         "type": "string",

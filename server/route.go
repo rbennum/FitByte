@@ -51,7 +51,7 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 		file := controllers.Group("/file")
 		{
-			file.POST("", fileHandler.Upload)
+			file.POST("", middleware.Authorization, fileHandler.Upload)
 		}
 
 		user := controllers.Group("/user")
