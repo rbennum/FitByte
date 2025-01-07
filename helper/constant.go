@@ -16,6 +16,8 @@ const (
 	UserServiceDeleteByID FunctionCaller = "userService.DeleteById"
 	UserServiceGetProfile FunctionCaller = "userService.GetProfile"
 
+	EmployeeServiceGet FunctionCaller = "employeeService.Get"
+
 	GenerateFromPassword FunctionCaller = "GenerateFromPassword"
 
 	UserHandler FunctionCaller = "UserHandler"

@@ -4,12 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
+	employeeHandler "github.com/levensspel/go-gin-template/handler/employee"
 	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
+	employeeRepository "github.com/levensspel/go-gin-template/repository/employee"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
 	userRepository "github.com/levensspel/go-gin-template/repository/user"
+	employeeService "github.com/levensspel/go-gin-template/service/employee"
 	fileService "github.com/levensspel/go-gin-template/service/file"
 	userService "github.com/levensspel/go-gin-template/service/user"
 
@@ -36,6 +39,10 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	authHandler := authHandler.NewHandler(userService, logger)
 	fileHandler := fileHandler.NewHandler(fileService, logger)
 
+	employeeRepo := employeeRepository.NewEmployeeRepository(db)
+	employeeService := employeeService.NewEmployeeService(employeeRepo, logger)
+	employeeHdlr := employeeHandler.NewEmployeeHandler(employeeService, logger)
+
 	swaggerRoute := r.Group("/")
 	{
 		//Route untuk Swagger
@@ -59,6 +66,11 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 			user.GET("", middleware.Authorization, userHdlr.GetProfile)
 			user.PUT("", middleware.Authorization, userHdlr.Update)
 			user.DELETE("", middleware.Authorization, userHdlr.Delete)
+		}
+
+		employee := controllers.Group("/employee")
+		{
+			employee.GET("", middleware.Authorization, employeeHdlr.GetEmployees)
 		}
 		// tambah route lainnya disini
 	}
