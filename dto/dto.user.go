@@ -45,3 +45,11 @@ type ResponseLogin struct {
 	Email string `json:"email"`
 	Token string `json:"token"`
 }
+
+type ResposneGetProfile struct {
+	Email           string `json:"email"`
+	Name            string `json:"name"`
+	UserImageUri    string `json:"userImageUri"`
+	CompanyName     string `json:"companyName"`
+	CompanyImageUri string `json:"companyImageUri"`
+}

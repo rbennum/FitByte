@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -30,4 +31,13 @@ func Authorization(c *gin.Context) {
 	}
 	c.Set("user_id", id)
 	c.Next()
+}
+
+func GetIdUserFromContext(ctx *gin.Context) (string, error) {
+	id, ok := ctx.Value("user_id").(string)
+	if !ok {
+		log.Printf(`Failed get data user context %v`, ctx.Value("user_id"))
+		return ``, fmt.Errorf("invalid user context")
+	}
+	return id, nil
 }
