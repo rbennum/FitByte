@@ -9,6 +9,7 @@ import (
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 )
 
 type UserHandler interface {
@@ -24,6 +25,12 @@ type handler struct {
 
 func NewUserHandler(service service.UserService, logger logger.Logger) UserHandler {
 	return &handler{service: service, logger: logger}
+}
+
+func NewUserHandlerInject(i do.Injector) (UserHandler, error) {
+	_service := do.MustInvoke[service.UserService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewUserHandler(_service, &_logger), nil
 }
 
 // Update user

@@ -11,7 +11,6 @@ import (
 	"github.com/levensspel/go-gin-template/middleware"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
 	fileService "github.com/levensspel/go-gin-template/service/file"
-	userService "github.com/levensspel/go-gin-template/service/user"
 	"github.com/samber/do/v2"
 
 	_ "github.com/levensspel/go-gin-template/docs"
@@ -29,11 +28,11 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 	fileRepo := fileRepository.NewFileRepository(db)
 
-	userService := do.MustInvoke[userService.UserService](di.Injector)
 	fileService := fileService.NewFileService(fileRepo, logger)
 
-	userHdlr := userHandler.NewUserHandler(userService, logger)
-	authHandler := authHandler.NewHandler(userService, logger)
+	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
+	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
+
 	fileHandler := fileHandler.NewHandler(fileService, logger)
 
 	swaggerRoute := r.Group("/")
@@ -56,9 +55,9 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 		user := controllers.Group("/user")
 		{
-			user.GET("", middleware.Authorization, userHdlr.GetProfile)
-			user.PUT("", middleware.Authorization, userHdlr.Update)
-			user.DELETE("", middleware.Authorization, userHdlr.Delete)
+			user.GET("", middleware.Authorization, userHandler.GetProfile)
+			user.PUT("", middleware.Authorization, userHandler.Update)
+			user.DELETE("", middleware.Authorization, userHandler.Delete)
 		}
 		// tambah route lainnya disini
 	}

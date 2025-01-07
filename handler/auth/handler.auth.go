@@ -10,6 +10,7 @@ import (
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	service "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 )
 
 type AuthorizationHandler interface {
@@ -23,6 +24,12 @@ type handler struct {
 
 func NewHandler(service service.UserService, logger logger.Logger) AuthorizationHandler {
 	return &handler{service: service, logger: logger}
+}
+
+func NewHandlerInject(i do.Injector) (AuthorizationHandler, error) {
+	_service := do.MustInvoke[service.UserService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewHandler(_service, &_logger), nil
 }
 
 // Entry for authentication or create new user

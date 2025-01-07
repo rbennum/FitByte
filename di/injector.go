@@ -6,6 +6,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/database"
 	"github.com/levensspel/go-gin-template/domain"
+	authHandler "github.com/levensspel/go-gin-template/handler/auth"
+	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/infrastructure/storage"
 	"github.com/levensspel/go-gin-template/logger"
 	userService "github.com/levensspel/go-gin-template/service/user"
@@ -31,6 +33,10 @@ func init() {
 
 	// Services
 	do.Provide[userService.UserService](Injector, userService.NewUserServiceInject)
+
+	// Handlers
+	do.Provide[userHandler.UserHandler](Injector, userHandler.NewUserHandlerInject)
+	do.Provide[authHandler.AuthorizationHandler](Injector, authHandler.NewHandlerInject)
 
 	// Setup client
 	envMode := os.Getenv("MODE")
