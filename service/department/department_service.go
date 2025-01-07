@@ -11,8 +11,8 @@ import (
 )
 
 type DepartmentService interface {
-	Create(input dto.RequestDepartment) (dto.ResponseSingleDepartment, error)
-	GetAll(name string, limit int, offset int) ([]dto.ResponseSingleDepartment, error)
+	Create(managerID string, input dto.RequestDepartment) (dto.ResponseSingleDepartment, error)
+	GetAll(managerID string, input dto.RequestDepartment) ([]dto.ResponseSingleDepartment, error)
 	Update(name string, id string) (dto.ResponseSingleDepartment, error)
 	Delete(id string) error
 }
@@ -30,12 +30,13 @@ func New(repo repositories.DepartmentRepository, logger logger.Logger) Departmen
 }
 
 func (s *service) Create(
+	managerID string,
 	input dto.RequestDepartment,
 ) (dto.ResponseSingleDepartment, error) {
 	if len(input.DepartmentName) < 4 || len(input.DepartmentName) > 33 {
 		return dto.ResponseSingleDepartment{}, helper.ErrBadRequest
 	}
-	row, err := s.repo.Create(context.Background(), input.DepartmentName)
+	row, err := s.repo.Create(context.Background(), input.DepartmentName, managerID)
 	if err != nil {
 		s.logger.Error(
 			fmt.Sprintf("Error fetching rows: %v", err),
@@ -52,11 +53,34 @@ func (s *service) Create(
 }
 
 func (s *service) GetAll(
-	name string,
-	limit int,
-	offset int,
+	managerID string,
+	input dto.RequestDepartment,
 ) ([]dto.ResponseSingleDepartment, error) {
-	return nil, nil
+	rows, err := s.repo.GetAll(
+		context.Background(),
+		input.DepartmentName,
+		input.Limit,
+		input.Offset,
+		managerID,
+	)
+	if err != nil {
+		s.logger.Error(
+			fmt.Sprintf("Error fetching rows: %v", err),
+			helper.DepartmentServiceGetAll,
+			err,
+		)
+		return nil, err
+	}
+	results := []dto.ResponseSingleDepartment{}
+	for _, item := range rows {
+		result := dto.ResponseSingleDepartment{}
+		result.DepartmentID = item.Id
+		result.DepartmentName = item.Name
+		s.logger.Info(result.DepartmentID, helper.DepartmentServiceGetAll)
+		s.logger.Info(result.DepartmentName, helper.DepartmentServiceGetAll)
+		results = append(results, result)
+	}
+	return results, nil
 }
 
 func (s *service) Update(

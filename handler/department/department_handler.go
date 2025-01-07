@@ -2,6 +2,7 @@ package departmentHandler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
+	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/department"
 )
 
@@ -37,6 +39,7 @@ func New(
 // @Description Create a new department
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "Bearer JWT token"
 // @Param data body dto.RequestDepartment true "data"
 // @Success 201 {object} helper.Response{data=helper.Response} "Created"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
@@ -44,13 +47,19 @@ func New(
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/department [POST]
 func (h *handler) Create(ctx *gin.Context) {
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
 	input := new(dto.RequestDepartment)
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate, input)
-		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
 	}
-	response, err := h.service.Create(*input)
+	response, err := h.service.Create(managerID, *input)
 	if errors.Is(err, helper.ErrBadRequest) {
 		h.logger.Error(err.Error(), helper.DepartmentHandlerCreate)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
@@ -60,7 +69,7 @@ func (h *handler) Create(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, helper.NewResponse(nil, err))
 		return
 	}
-	ctx.JSON(http.StatusCreated, response)
+	ctx.JSON(http.StatusOK, response)
 }
 
 // List all available departments
@@ -69,22 +78,41 @@ func (h *handler) Create(ctx *gin.Context) {
 // @Description List all available departments
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "Bearer + user token"
+// @Param limit query int false "limit query param"
+// @Param offset query int false "offset query param"
+// @Param name query string false "department name"
+// @Param Authorization header string true "Bearer JWT token"
 // @Success 200 {object} helper.Response{data=helper.Response} "Created"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorized"
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/department [GET]
 func (h *handler) GetAll(ctx *gin.Context) {
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
 	limit := h.getQueryInt(ctx, "limit", 5)
-	offset := h.getQueryInt(ctx, "offset", 5)
+	offset := h.getQueryInt(ctx, "offset", 0)
 	name := ctx.DefaultQuery("name", "")
-	response, err := h.service.GetAll(name, limit, offset)
+	if name == "" {
+		name = "%"
+	} else {
+		name = fmt.Sprintf("%%%s%%", name)
+	}
+	h.logger.Info(fmt.Sprintf("%d, %d, %s, %s", limit, offset, name, managerID), helper.DepartmentHandlerGetAll)
+	input := dto.RequestDepartment{}
+	input.DepartmentName = name
+	input.Limit = limit
+	input.Offset = offset
+	response, err := h.service.GetAll(managerID, input)
 	if err != nil {
 		h.logger.Error(err.Error(), helper.FunctionCaller("handler.GetAll"))
 		ctx.JSON(http.StatusBadGateway, helper.NewResponse(nil, err))
 		return
 	}
-	ctx.JSON(http.StatusAccepted, helper.NewResponse(response, nil))
+	ctx.JSON(http.StatusOK, response)
 }
 
 // Update a single record of department
