@@ -7,12 +7,14 @@ import (
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
+	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/user"
 )
 
 type UserHandler interface {
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	GetProfile(ctx *gin.Context)
 }
 
 type handler struct {
@@ -78,4 +80,30 @@ func (h handler) Delete(ctx *gin.Context) {
 
 	message := map[string]interface{}{"message": "your account has been successfully deleted"}
 	ctx.JSON(http.StatusOK, helper.NewResponse(message, nil))
+}
+
+// Get Profile user
+// @Tags users
+// @Summary Get Profile User
+// @Description Get Profile User
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "Bearer + user token"
+// @Success 200 {object} helper.Response{data=helper.Response} "OK"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
+// @Router /v1/user [GET]
+func (h handler) GetProfile(ctx *gin.Context) {
+	id, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	response, err := h.service.GetProfile(id)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
 }

@@ -21,6 +21,7 @@ type UserService interface {
 	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
+	GetProfile(id string) (*dto.ResposneGetProfile, error)
 }
 
 type service struct {
@@ -150,4 +151,20 @@ func (s *service) DeleteByID(id string) error {
 		return err
 	}
 	return err
+}
+
+func (s *service) GetProfile(id string) (*dto.ResposneGetProfile, error) {
+	profile, err := s.userRepo.GetProfile(context.Background(), id)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
+		return nil, err
+	}
+	result := dto.ResposneGetProfile{
+		Email:           profile.Email,
+		Name:            profile.Name,
+		UserImageUri:    profile.UserImageUri,
+		CompanyName:     profile.CompanyName,
+		CompanyImageUri: profile.CompanyImageUri,
+	}
+	return &result, nil
 }
