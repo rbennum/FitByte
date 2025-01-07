@@ -40,7 +40,7 @@ func (h handler) Post(ctx *gin.Context) {
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		h.logger.Warn(err.Error(), helper.FunctionCaller("AuthHandler.Post"), &input)
-		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return
 	}
 

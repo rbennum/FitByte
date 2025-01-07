@@ -4,10 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
+	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
-	repositories "github.com/levensspel/go-gin-template/repository/user"
+	fileRepository "github.com/levensspel/go-gin-template/repository/file"
+	userRepository "github.com/levensspel/go-gin-template/repository/user"
+	fileService "github.com/levensspel/go-gin-template/service/file"
 	userService "github.com/levensspel/go-gin-template/service/user"
 
 	_ "github.com/levensspel/go-gin-template/docs"
@@ -23,10 +26,15 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	// 	// untuk memanfaatkan api versioning, uncomment dan pakai ini
 	// }
 
-	userRepo := repositories.NewUserRepository(db)
+	userRepo := userRepository.NewUserRepository(db)
+	fileRepo := fileRepository.NewFileRepository(db)
+
 	userService := userService.NewUserService(userRepo, logger)
+	fileService := fileService.NewFileService(fileRepo, logger)
+
 	userHdlr := userHandler.NewUserHandler(userService, logger)
 	authHandler := authHandler.NewHandler(userService, logger)
+	fileHandler := fileHandler.NewHandler(fileService, logger)
 
 	swaggerRoute := r.Group("/")
 	{
@@ -39,6 +47,11 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 		auth := controllers.Group("/auth")
 		{
 			auth.POST("", authHandler.Post)
+		}
+
+		file := controllers.Group("/file")
+		{
+			file.POST("", fileHandler.Upload)
 		}
 
 		user := controllers.Group("/user")
