@@ -7,6 +7,8 @@ import (
 	"github.com/levensspel/go-gin-template/database"
 	"github.com/levensspel/go-gin-template/domain"
 	"github.com/levensspel/go-gin-template/infrastructure/storage"
+	"github.com/levensspel/go-gin-template/logger"
+	userService "github.com/levensspel/go-gin-template/service/user"
 
 	userRepository "github.com/levensspel/go-gin-template/repository/user"
 
@@ -20,10 +22,15 @@ func init() {
 
 	// Setup database connection
 	do.Provide[*pgxpool.Pool](Injector, database.NewUserRepositoryInject)
+	// setup logger
+	do.Provide[logger.LogHandler](Injector, logger.NewlogHandlerInject)
 
 	// Setup repositories
 	// UserRepository
 	do.Provide[userRepository.UserRepository](Injector, userRepository.NewUserRepositoryInject)
+
+	// Services
+	do.Provide[userService.UserService](Injector, userService.NewUserServiceInject)
 
 	// Setup client
 	envMode := os.Getenv("MODE")

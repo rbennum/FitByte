@@ -3,6 +3,7 @@ package logger
 
 import (
 	"github.com/levensspel/go-gin-template/helper"
+	"github.com/samber/do/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -15,11 +16,11 @@ type Logger interface {
 	Warn(msg string, function helper.FunctionCaller, data ...interface{})
 }
 
-type logHandler struct {
+type LogHandler struct {
 	logger *zap.SugaredLogger
 }
 
-func NewlogHandler() *logHandler {
+func NewlogHandler() *LogHandler {
 	lumberjackLogger := &lumberjack.Logger{
 		Filename:   "./logs/app.log",
 		MaxSize:    10, // Max megabytes before log is rotated
@@ -40,33 +41,38 @@ func NewlogHandler() *logHandler {
 	)
 
 	logger := zap.New(core, zap.AddCaller())
-	return &logHandler{
+	return &LogHandler{
 		logger: logger.Sugar(),
 	}
 }
 
-func (l *logHandler) Info(msg string, function helper.FunctionCaller, data ...interface{}) {
+func NewlogHandlerInject(i do.Injector) (LogHandler, error) {
+	logger := NewlogHandler()
+	return *logger, nil
+}
+
+func (l *LogHandler) Info(msg string, function helper.FunctionCaller, data ...interface{}) {
 	l.logger.Infow(msg,
 		"called_by", function,
 		"data", data,
 	)
 }
 
-func (l *logHandler) Error(msg string, function helper.FunctionCaller, data ...interface{}) {
+func (l *LogHandler) Error(msg string, function helper.FunctionCaller, data ...interface{}) {
 	l.logger.Errorw(msg,
 		"called_by", function,
 		"data", data,
 	)
 }
 
-func (l *logHandler) Debug(msg string, function helper.FunctionCaller, data ...interface{}) {
+func (l *LogHandler) Debug(msg string, function helper.FunctionCaller, data ...interface{}) {
 	l.logger.Debugw(msg,
 		"called_by", function,
 		"data", data,
 	)
 }
 
-func (l *logHandler) Warn(msg string, function helper.FunctionCaller, data ...interface{}) {
+func (l *LogHandler) Warn(msg string, function helper.FunctionCaller, data ...interface{}) {
 	l.logger.Warnw(msg,
 		"called_by", function,
 		"data", data,

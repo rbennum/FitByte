@@ -3,15 +3,16 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/levensspel/go-gin-template/di"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
 	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
-	userRepository "github.com/levensspel/go-gin-template/repository/user"
 	fileService "github.com/levensspel/go-gin-template/service/file"
 	userService "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 
 	_ "github.com/levensspel/go-gin-template/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -26,10 +27,9 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	// 	// untuk memanfaatkan api versioning, uncomment dan pakai ini
 	// }
 
-	userRepo := userRepository.NewUserRepository(db)
 	fileRepo := fileRepository.NewFileRepository(db)
 
-	userService := userService.NewUserService(userRepo, logger)
+	userService := do.MustInvoke[userService.UserService](di.Injector)
 	fileService := fileService.NewFileService(fileRepo, logger)
 
 	userHdlr := userHandler.NewUserHandler(userService, logger)

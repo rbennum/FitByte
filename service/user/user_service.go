@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/levensspel/go-gin-template/auth"
-	"github.com/levensspel/go-gin-template/di"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/entity"
 	"github.com/levensspel/go-gin-template/helper"
@@ -19,7 +18,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService interface {
+type IUserService interface {
 	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
 	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
@@ -27,23 +26,28 @@ type UserService interface {
 	GetProfile(managerid string) (*dto.ResposneGetProfile, error)
 }
 
-type service struct {
+type UserService struct {
 	userRepo repositories.UserRepository
-	logger   logger.Logger
+	logger   logger.LogHandler
 }
 
 func NewUserService(
 	userRepo repositories.UserRepository,
-	logger logger.Logger,
+	logger logger.LogHandler,
 ) UserService {
-	_userRepo := do.MustInvoke[repositories.UserRepository](di.Injector)
-	return &service{
-		userRepo: _userRepo,
+	return UserService{
+		userRepo: userRepo,
 		logger:   logger,
 	}
 }
 
-func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
+func NewUserServiceInject(i do.Injector) (UserService, error) {
+	_userRepo := do.MustInvoke[repositories.UserRepository](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewUserService(_userRepo, _logger), nil
+}
+
+func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 
 	if err != nil {
@@ -84,7 +88,7 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 	return response, nil
 }
 
-func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
+func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
 	err := validation.ValidateUserLogin(input)
 	if err != nil {
 		return dto.ResponseLogin{}, err
@@ -122,7 +126,7 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	return response, nil
 }
 
-func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
+func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 	user := entity.User{}
 	user.Id = input.Id
 	user.Username.String = input.Username
@@ -149,7 +153,7 @@ func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 	return response, nil
 }
 
-func (s *service) DeleteByID(id string) error {
+func (s *UserService) DeleteByID(id string) error {
 	err := s.userRepo.Delete(context.Background(), id)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
@@ -159,7 +163,7 @@ func (s *service) DeleteByID(id string) error {
 }
 
 // Get manager profile by their id
-func (s *service) GetProfile(id string) (*dto.ResposneGetProfile, error) {
+func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 	profile, err := s.userRepo.GetProfile(context.Background(), id)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
