@@ -3,15 +3,15 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/levensspel/go-gin-template/di"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
 	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
-	userRepository "github.com/levensspel/go-gin-template/repository/user"
 	fileService "github.com/levensspel/go-gin-template/service/file"
-	userService "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 
 	_ "github.com/levensspel/go-gin-template/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -26,14 +26,13 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	// 	// untuk memanfaatkan api versioning, uncomment dan pakai ini
 	// }
 
-	userRepo := userRepository.NewUserRepository(db)
 	fileRepo := fileRepository.NewFileRepository(db)
 
-	userService := userService.NewUserService(userRepo, logger)
 	fileService := fileService.NewFileService(fileRepo, logger)
 
-	userHdlr := userHandler.NewUserHandler(userService, logger)
-	authHandler := authHandler.NewHandler(userService, logger)
+	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
+	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
+
 	fileHandler := fileHandler.NewHandler(fileService, logger)
 
 	swaggerRoute := r.Group("/")
@@ -56,9 +55,9 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 		user := controllers.Group("/user")
 		{
-			user.GET("", middleware.Authorization, userHdlr.GetProfile)
-			user.PUT("", middleware.Authorization, userHdlr.Update)
-			user.DELETE("", middleware.Authorization, userHdlr.Delete)
+			user.GET("", middleware.Authorization, userHandler.GetProfile)
+			user.PUT("", middleware.Authorization, userHandler.Update)
+			user.DELETE("", middleware.Authorization, userHandler.Delete)
 		}
 		// tambah route lainnya disini
 	}
