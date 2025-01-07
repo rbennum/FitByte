@@ -77,3 +77,14 @@ One the applicatio is running, you can access the Swagger API documentation at:
 ```
 http://localhost:3000/swagger/index.html
 ```
+
+# Use of Dependency Injection
+Caranya adalah
+1. Setup dari dependensi dasar sebuah service yang sekiranya tidak membutuhkan dependensi service lain, bisa cek pada `di/injector.go`
+2. Siapkan constructor dari sebuah service
+3. Siapkan injector dengan memanggilkan `MustInvoke` pada servis yang di-dependensi
+4. Kembali pada `di/injector.go` dan lakukan dengan `do.Provide` diurutan terbawah setelah service yang di-dependensikan
+5. Jika service tersebut dibutukan pada `router` lakukan dengan cara seperti ini, contoh 
+```go
+authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
+```

@@ -22,6 +22,10 @@ var Injector *do.RootScope
 func init() {
 	Injector = do.New()
 
+	// Jika ada dependensi, tolong tambahkan sesuai dengan hirarki
+
+	// Setup dependensi-depenensi dasar sebuah service
+
 	// Setup database connection
 	do.Provide[*pgxpool.Pool](Injector, database.NewUserRepositoryInject)
 	// setup logger
@@ -31,10 +35,10 @@ func init() {
 	// UserRepository
 	do.Provide[userRepository.UserRepository](Injector, userRepository.NewUserRepositoryInject)
 
-	// Services
+	// Setup Services
 	do.Provide[userService.UserService](Injector, userService.NewUserServiceInject)
 
-	// Handlers
+	// Setup Handlers
 	do.Provide[userHandler.UserHandler](Injector, userHandler.NewUserHandlerInject)
 	do.Provide[authHandler.AuthorizationHandler](Injector, authHandler.NewHandlerInject)
 
