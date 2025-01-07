@@ -91,7 +91,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Either create or login
+      description: Upload an file
       parameters:
       - description: Bearer JWT token
         in: header
@@ -166,9 +166,9 @@ paths:
                 errors:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
-      summary: Entry for authentication or create new user
+      summary: Upload an file
       tags:
-      - auth
+      - file
   /v1/user:
     delete:
       consumes:
