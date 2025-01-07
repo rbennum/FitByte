@@ -1,7 +1,8 @@
-package repositories
+package departmentRepository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
@@ -18,15 +19,30 @@ func New(db *pgxpool.Pool) DepartmentRepository {
 func (r *DepartmentRepository) Create(
 	ctx context.Context,
 	name string,
-	limit int,
-	offset int,
-) error {
-	return nil
+) (*entity.Department, error) {
+	query := `
+		INSERT INTO department (departmentid, departmentname)
+		VALUES (DEFAULT, $1)
+		RETURNING departmentid, departmentname
+	`
+	row := r.db.QueryRow(ctx, query, name)
+	var departmentID int
+	var departmentName string
+	err := row.Scan(&departmentID, &departmentName)
+	if err != nil {
+		return nil, err
+	}
+	result := entity.Department{
+		Id:   fmt.Sprintf("%d", departmentID),
+		Name: departmentName,
+	}
+	return &result, nil
 }
 
 func (r *DepartmentRepository) GetAll(
 	ctx context.Context,
-	dept entity.Department,
+	limit int,
+	offset int,
 ) ([]entity.Department, error) {
 	return nil, nil
 }

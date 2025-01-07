@@ -1,7 +1,11 @@
-package department_service
+package departmentService
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/levensspel/go-gin-template/dto"
+	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/department"
 )
@@ -18,8 +22,9 @@ type service struct {
 	logger logger.Logger
 }
 
-func New(logger logger.Logger) DepartmentService {
+func New(repo repositories.DepartmentRepository, logger logger.Logger) DepartmentService {
 	return &service{
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -27,7 +32,23 @@ func New(logger logger.Logger) DepartmentService {
 func (s *service) Create(
 	input dto.RequestDepartment,
 ) (dto.ResponseSingleDepartment, error) {
-	return dto.ResponseSingleDepartment{}, nil
+	if len(input.DepartmentName) < 4 || len(input.DepartmentName) > 33 {
+		return dto.ResponseSingleDepartment{}, helper.ErrBadRequest
+	}
+	row, err := s.repo.Create(context.Background(), input.DepartmentName)
+	if err != nil {
+		s.logger.Error(
+			fmt.Sprintf("Error fetching rows: %v", err),
+			helper.DepartmentServiceCreate,
+			err,
+		)
+		return dto.ResponseSingleDepartment{}, err
+	}
+	result := dto.ResponseSingleDepartment{
+		DepartmentID:   row.Id,
+		DepartmentName: row.Name,
+	}
+	return result, nil
 }
 
 func (s *service) GetAll(

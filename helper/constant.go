@@ -19,6 +19,16 @@ const (
 	GenerateFromPassword FunctionCaller = "GenerateFromPassword"
 
 	UserHandler FunctionCaller = "UserHandler"
+
+	DepartmentHandlerCreate FunctionCaller = "DepartmentHandler.Create"
+	DepartmentHandlerGetAll FunctionCaller = "DepartmentHandler.GetAll"
+	DepartmentHandlerPatch  FunctionCaller = "DepartmentHandler.Patch"
+	DepartmentHandlerDelete FunctionCaller = "DepartmentHandler.Delete"
+
+	DepartmentServiceCreate FunctionCaller = "DepartmentService.Create"
+	DepartmentServiceGetAll FunctionCaller = "DepartmentService.GetAll"
+	DepartmentServicePatch  FunctionCaller = "DepartmentService.Patch"
+	DepartmentServiceDelete FunctionCaller = "DepartmentService.Delete"
 )
 
 var ErrorBadRequest = errors.New("invalid request format")
