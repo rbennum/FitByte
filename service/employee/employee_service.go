@@ -2,15 +2,18 @@ package user_service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/employee"
+	"github.com/samber/do/v2"
 )
 
 type EmployeeService interface {
-	GetEmployees(input dto.GetEmployeesRequest) ([]dto.GetEmployeeResponseItem, error)
+	Create(input dto.EmployeePayload, managerId string) error
+	GetAll(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error)
 }
 
 type service struct {
@@ -28,21 +31,31 @@ func NewEmployeeService(
 	}
 }
 
-func (s *service) GetEmployees(input dto.GetEmployeesRequest) ([]dto.GetEmployeeResponseItem, error) {
-	param := &dto.GetEmployeesRequest{
-		Limit:          input.Limit,
-		Offset:         input.Offset,
-		IdentityNumber: input.IdentityNumber,
-		Name:           input.Name,
-		Gender:         input.Gender,
-		DepartmentID:   input.DepartmentID,
-		ManagerID:      input.ManagerID,
+func NewEmployeeServiceInject(i do.Injector) (EmployeeService, error) {
+	_repo := do.MustInvoke[repositories.EmployeeRepository](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewEmployeeService(_repo, &_logger), nil
+}
+
+func (s *service) Create(input dto.EmployeePayload, managerId string) error {
+	err := s.employeeRepo.Create(context.Background(), &input, managerId)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.EmployeeServiceGet, err)
+		if strings.Contains(err.Error(), "23505") {
+			return helper.ErrConflict
+		}
+
+		return err
 	}
 
-	employees, err := s.employeeRepo.GetEmployees(context.Background(), param)
+	return nil
+}
+
+func (s *service) GetAll(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
+	employees, err := s.employeeRepo.GetAll(context.Background(), &input)
 	if err != nil {
-		s.logger.Error(err.Error(), helper.EmployeeServiceGet, param)
-		return []dto.GetEmployeeResponseItem{}, err
+		s.logger.Error(err.Error(), helper.EmployeeServiceGet, input)
+		return []dto.EmployeePayload{}, err
 	}
 
 	return employees, nil

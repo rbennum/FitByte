@@ -11,11 +11,7 @@ import (
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
-	departmentRepository "github.com/levensspel/go-gin-template/repository/department"
-	employeeRepository "github.com/levensspel/go-gin-template/repository/employee"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
-	departmentService "github.com/levensspel/go-gin-template/service/department"
-	employeeService "github.com/levensspel/go-gin-template/service/employee"
 	fileService "github.com/levensspel/go-gin-template/service/file"
 	"github.com/samber/do/v2"
 
@@ -33,20 +29,13 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	// }
 
 	fileRepo := fileRepository.NewFileRepository(db)
-	departmentRepo := departmentRepository.New(db)
-
 	fileService := fileService.NewFileService(fileRepo, logger)
-	departmentService := departmentService.New(departmentRepo, logger)
 
 	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
 	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
-
 	fileHandler := fileHandler.NewHandler(fileService, logger)
-	deptHandler := departmentHandler.New(departmentService, logger)
-
-	employeeRepo := employeeRepository.NewEmployeeRepository(db)
-	employeeService := employeeService.NewEmployeeService(employeeRepo, logger)
-	employeeHdlr := employeeHandler.NewEmployeeHandler(employeeService, logger)
+	deptHandler := do.MustInvoke[departmentHandler.DepartmentHandler](di.Injector)
+	employeeHdlr := do.MustInvoke[employeeHandler.EmployeeHandler](di.Injector)
 
 	swaggerRoute := r.Group("/")
 	{
@@ -83,7 +72,8 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 		employee := controllers.Group("/employee")
 		{
-			employee.GET("", middleware.Authorization, employeeHdlr.GetEmployees)
+			employee.POST("", middleware.Authorization, employeeHdlr.Create)
+			employee.GET("", middleware.Authorization, employeeHdlr.GetAll)
 		}
 		// tambah route lainnya disini
 	}

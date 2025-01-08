@@ -8,6 +8,14 @@ const (
 	DefaultOffset = 0
 )
 
+type EmployeePayload struct {
+	IdentityNumber   string `json:"identityNumber" validate:"required,min=5,max=33"`
+	Name             string `json:"name" validate:"required,min=4,max=33"`
+	EmployeeImageUri string `json:"employeeImageUri" validate:"required,uri"`
+	Gender           string `json:"gender" validate:"required"`
+	DepartmentID     string `json:"departmentId" validate:"required,uuid"`
+}
+
 type GetEmployeesRequest struct {
 	Limit          int    `query:"limit" validate:"gte=0"`
 	Offset         int    `query:"offset" validate:"gte=0"`
@@ -16,12 +24,4 @@ type GetEmployeesRequest struct {
 	Gender         string `query:"gender" validate:""`
 	DepartmentID   string `query:"departmentId" validate:"omitempty,uuid"`
 	ManagerID      string `query:"managerId" validate:"omitempty,uuid"`
-}
-
-type GetEmployeeResponseItem struct {
-	IdentityNumber   string `json:"identityNumber"`
-	Name             string `json:"name"`
-	Gender           string `json:"gender"`
-	EmployeeImageUri string `json:"employeeImageUri"`
-	DepartmentID     string `json:"departmentId"`
 }
