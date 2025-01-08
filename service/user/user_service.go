@@ -2,6 +2,7 @@ package userService
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ type IUserService interface {
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
 	GetProfile(managerid string) (*dto.ResposneGetProfile, error)
+	UpdateProfile(managerid string, input dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error)
 }
 
 type UserService struct {
@@ -183,4 +185,48 @@ func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 		CompanyImageUri: profile.CompanyImageUri.String,
 	}
 	return &result, nil
+}
+
+// Update manager profile by their id
+func (s *UserService) UpdateProfile(id string, req dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error) {
+	profile, err := s.userRepo.GetProfile(context.Background(), id)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
+		return nil, err
+	}
+
+	if req.Email != nil {
+		profile.Email = *req.Email
+	}
+	if req.Name != nil {
+		profile.Name = ToNullString(req.Name)
+	}
+	if req.UserImageUri != nil {
+		profile.UserImageUri = ToNullString(req.UserImageUri)
+	}
+	if req.CompanyName != nil {
+		profile.CompanyName = ToNullString(req.CompanyName)
+	}
+	if req.CompanyImageUri != nil {
+		profile.CompanyImageUri = ToNullString(req.CompanyImageUri)
+	}
+
+	s.userRepo.UpdateProfile(context.Background(), id, profile)
+
+	result := dto.RequestUpdateProfile{
+		Email:           &profile.Email,
+		Name:            &profile.Name.String,
+		UserImageUri:    &profile.UserImageUri.String,
+		CompanyName:     &profile.CompanyName.String,
+		CompanyImageUri: &profile.CompanyImageUri.String,
+	}
+
+	return &result, nil
+}
+
+func ToNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{String: "", Valid: false}
+	}
+	return sql.NullString{String: *s, Valid: true}
 }

@@ -151,3 +151,23 @@ func (r *UserRepository) GetProfile(ctx context.Context, id string) (*entity.Get
 	return &user, nil
 
 }
+
+func (r *UserRepository) UpdateProfile(ctx context.Context, id string, data *entity.GetProfile) error {
+	_, err := r.db.Exec(
+		ctx,
+		`UPDATE manager SET 
+			email= $1, 
+			name=$2, 
+			userImageUri=$3, 
+			companyName=$4, 
+			companyImageUri=$5
+		WHERE managerid = $6`,
+		data.Email,
+		data.Name.String,
+		data.UserImageUri.String,
+		data.CompanyName.String,
+		data.CompanyImageUri.String,
+		id,
+	)
+	return err
+}

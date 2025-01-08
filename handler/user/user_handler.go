@@ -16,6 +16,7 @@ type UserHandler interface {
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
 	GetProfile(ctx *gin.Context)
+	UpdateProfile(ctx *gin.Context)
 }
 
 type handler struct {
@@ -108,6 +109,40 @@ func (h handler) GetProfile(ctx *gin.Context) {
 	}
 
 	response, err := h.service.GetProfile(id)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+}
+
+// Update profile
+// @Tags users
+// @Summary Update profile
+// @Description Update profile
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "Bearer + user token"
+// @Param data body dto.RequestUpdateProfile true "data"
+// @Success 200 {object} helper.Response{data=helper.Response} "OK"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
+// @Router /v1/user [PATCH]
+func (h handler) UpdateProfile(ctx *gin.Context) {
+	id, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	req := new(dto.RequestUpdateProfile)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn(err.Error(), helper.UserHandler, &req)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	response, err := h.service.UpdateProfile(id, *req)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
