@@ -4,6 +4,19 @@ definitions:
       uri:
         type: string
     type: object
+  dto.RequestDepartment:
+    properties:
+      limit:
+        type: integer
+      name:
+        maxLength: 33
+        minLength: 4
+        type: string
+      offset:
+        type: integer
+    required:
+    - name
+    type: object
   dto.UserRequestPayload:
     properties:
       action:
@@ -87,11 +100,228 @@ paths:
       summary: Entry for authentication or create new user
       tags:
       - auth
+  /v1/department:
+    get:
+      consumes:
+      - application/json
+      description: List all available departments
+      parameters:
+      - description: limit query param
+        in: query
+        name: limit
+        type: integer
+      - description: offset query param
+        in: query
+        name: offset
+        type: integer
+      - description: department name
+        in: query
+        name: name
+        type: string
+      - description: Bearer JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Fetch a list of all departments
+      tags:
+      - department
+    post:
+      consumes:
+      - application/json
+      description: Create a new department
+      parameters:
+      - description: Bearer JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestDepartment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Create a new department
+      tags:
+      - department
+  /v1/department/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a department
+      parameters:
+      - description: Bearer + user token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: department ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Delete a department
+      tags:
+      - department
+    patch:
+      consumes:
+      - application/json
+      description: Update a single record of department
+      parameters:
+      - description: Bearer + user token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestDepartment'
+      - description: department ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Update a single record of department
+      tags:
+      - department
   /v1/file:
     post:
       consumes:
       - application/json
-      description: Either create or login
+      description: Upload an file
       parameters:
       - description: Bearer JWT token
         in: header
@@ -166,9 +396,9 @@ paths:
                 errors:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
-      summary: Entry for authentication or create new user
+      summary: Upload an file
       tags:
-      - auth
+      - file
   /v1/user:
     delete:
       consumes:

@@ -3,18 +3,21 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/levensspel/go-gin-template/di"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
+	departmentHandler "github.com/levensspel/go-gin-template/handler/department"
 	employeeHandler "github.com/levensspel/go-gin-template/handler/employee"
 	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
+	departmentRepository "github.com/levensspel/go-gin-template/repository/department"
 	employeeRepository "github.com/levensspel/go-gin-template/repository/employee"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
-	userRepository "github.com/levensspel/go-gin-template/repository/user"
+	departmentService "github.com/levensspel/go-gin-template/service/department"
 	employeeService "github.com/levensspel/go-gin-template/service/employee"
 	fileService "github.com/levensspel/go-gin-template/service/file"
-	userService "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 
 	_ "github.com/levensspel/go-gin-template/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -29,15 +32,17 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	// 	// untuk memanfaatkan api versioning, uncomment dan pakai ini
 	// }
 
-	userRepo := userRepository.NewUserRepository(db)
 	fileRepo := fileRepository.NewFileRepository(db)
+	departmentRepo := departmentRepository.New(db)
 
-	userService := userService.NewUserService(userRepo, logger)
 	fileService := fileService.NewFileService(fileRepo, logger)
+	departmentService := departmentService.New(departmentRepo, logger)
 
-	userHdlr := userHandler.NewUserHandler(userService, logger)
-	authHandler := authHandler.NewHandler(userService, logger)
+	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
+	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
+
 	fileHandler := fileHandler.NewHandler(fileService, logger)
+	deptHandler := departmentHandler.New(departmentService, logger)
 
 	employeeRepo := employeeRepository.NewEmployeeRepository(db)
 	employeeService := employeeService.NewEmployeeService(employeeRepo, logger)
@@ -58,14 +63,21 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 		file := controllers.Group("/file")
 		{
-			file.POST("", fileHandler.Upload)
+			file.POST("", middleware.Authorization, fileHandler.Upload)
 		}
 
 		user := controllers.Group("/user")
 		{
-			user.GET("", middleware.Authorization, userHdlr.GetProfile)
-			user.PUT("", middleware.Authorization, userHdlr.Update)
-			user.DELETE("", middleware.Authorization, userHdlr.Delete)
+			user.GET("", middleware.Authorization, userHandler.GetProfile)
+			user.PUT("", middleware.Authorization, userHandler.Update)
+			user.DELETE("", middleware.Authorization, userHandler.Delete)
+		}
+		department := controllers.Group("/department")
+		{
+			department.POST("", middleware.Authorization, deptHandler.Create)
+			department.GET("", middleware.Authorization, deptHandler.GetAll)
+			department.PATCH("/:id", middleware.Authorization, deptHandler.Update)
+			department.DELETE("/:id", middleware.Authorization, deptHandler.Delete)
 		}
 
 		employee := controllers.Group("/employee")
