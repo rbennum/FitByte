@@ -3,6 +3,7 @@ package departmentService
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
@@ -13,8 +14,8 @@ import (
 type DepartmentService interface {
 	Create(managerID string, input dto.RequestDepartment) (dto.ResponseSingleDepartment, error)
 	GetAll(managerID string, input dto.RequestDepartment) ([]dto.ResponseSingleDepartment, error)
-	Update(name string, id string) (dto.ResponseSingleDepartment, error)
-	Delete(id string) error
+	Update(name string, id string, managerID string) (dto.ResponseSingleDepartment, error)
+	Delete(id string, managerID string) error
 }
 
 type service struct {
@@ -86,10 +87,50 @@ func (s *service) GetAll(
 func (s *service) Update(
 	name string,
 	id string,
+	managerID string,
 ) (dto.ResponseSingleDepartment, error) {
-	return dto.ResponseSingleDepartment{}, nil
+	deptID, err := strconv.Atoi(id)
+	if err != nil {
+		s.logger.Error(
+			fmt.Sprintf("Invalid int conversion: %v", err),
+			helper.DepartmentServicePatch,
+			err,
+		)
+		return dto.ResponseSingleDepartment{}, err
+	}
+	row, err := s.repo.Update(context.Background(), name, deptID, managerID)
+	if err != nil {
+		s.logger.Error(
+			fmt.Sprintf("Error fetching rows: %v", err),
+			helper.DepartmentServicePatch,
+			err,
+		)
+		return dto.ResponseSingleDepartment{}, err
+	}
+	result := dto.ResponseSingleDepartment{
+		DepartmentID:   row.Id,
+		DepartmentName: row.Name,
+	}
+	return result, nil
 }
 
-func (s *service) Delete(id string) error {
-	return nil
+func (s *service) Delete(id string, managerID string) error {
+	deptID, err := strconv.Atoi(id)
+	if err != nil {
+		s.logger.Error(
+			fmt.Sprintf("Invalid int conversion: %v", err),
+			helper.DepartmentServiceDelete,
+			err,
+		)
+		return err
+	}
+	err = s.repo.Delete(context.Background(), deptID, managerID, s.logger)
+	if err != nil {
+		s.logger.Error(
+			err.Error(),
+			helper.DepartmentServiceDelete,
+			err,
+		)
+	}
+	return err
 }

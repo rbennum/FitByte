@@ -118,39 +118,77 @@ func (h *handler) GetAll(ctx *gin.Context) {
 // Update a single record of department
 // @Tags department
 // @Summary Update a single record of department
-// @Description List all available departments
+// @Description Update a single record of department
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer + user token"
 // @Param data body dto.RequestDepartment true "data"
+// @Param id path string true "department ID"
 // @Success 200 {object} helper.Response{data=helper.Response} "Created"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorized"
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
-// @Router /v1/department [PATCH]
+// @Router /v1/department/{id} [PATCH]
 func (h *handler) Update(ctx *gin.Context) {
-	// TODO: get request params
-	// TODO: validate whether the params are valid; if not, refer to default values
-	// TODO: call service
-	// TODO: return JSON
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		h.logger.Warn(err.Error(), helper.DepartmentHandlerPatch)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+	deptID := ctx.Param("id")
+	input := new(dto.RequestDepartment)
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		h.logger.Warn(err.Error(), helper.DepartmentHandlerPatch, input)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+	response, err := h.service.Update(input.DepartmentName, deptID, managerID)
+	if err != nil {
+		h.logger.Error(err.Error(), helper.DepartmentHandlerPatch)
+		ctx.JSON(http.StatusBadGateway, helper.NewResponse(nil, err))
+		return
+	}
+	ctx.JSON(http.StatusOK, response)
 }
 
 // Delete a department
 // @Tags department
 // @Summary Delete a department
-// @Description List all available departments
+// @Description Delete a department
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer + user token"
-// @Param data body dto.RequestDepartment true "data"
+// @Param id path string true "department ID"
 // @Success 200 {object} helper.Response{data=helper.Response} "Created"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorized"
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
-// @Router /v1/department [DELETE]
+// @Router /v1/department/{id} [DELETE]
 func (h *handler) Delete(ctx *gin.Context) {
-	// TODO: get request params
-	// TODO: validate whether the params are valid; if not, refer to default values
-	// TODO: call service
-	// TODO: return JSON
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		h.logger.Error(err.Error(), helper.DepartmentHandlerDelete)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+	deptID := ctx.Param("id")
+	if deptID == "" {
+		h.logger.Error(err.Error(), helper.DepartmentHandlerDelete)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+		return
+	}
+	err = h.service.Delete(deptID, managerID)
+	if err != nil {
+		if errors.Is(err, helper.ErrNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("%s is not found", deptID)})
+		} else if errors.Is(err, helper.ErrConflict) {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "still contain employee(s)"})
+		} else {
+			ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		}
+		h.logger.Error(err.Error(), helper.DepartmentHandlerDelete, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"result": "the department has been successfully deleted"})
 }
 
 func (h *handler) getQueryInt(ctx *gin.Context, key string, defaultValue int) int {

@@ -2,10 +2,14 @@ package departmentRepository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
+	"github.com/levensspel/go-gin-template/helper"
+	"github.com/levensspel/go-gin-template/logger"
 )
 
 type DepartmentRepository struct {
@@ -78,14 +82,109 @@ func (r *DepartmentRepository) GetAll(
 
 func (r *DepartmentRepository) Update(
 	ctx context.Context,
-	dept entity.Department,
-) error {
-	return nil
+	name string,
+	deptID int,
+	managerID string,
+) (*entity.Department, error) {
+	query := `
+		UPDATE department
+		SET departmentname = $1,
+			updatedon = CURRENT_TIMESTAMP
+		WHERE 
+			departmentid = $2
+			AND managerid = $3
+			AND isdeleted = FALSE
+		RETURNING departmentid, departmentname;
+	`
+	var returnedID string
+	var returnedName string
+	err := r.db.QueryRow(ctx, query, name, deptID, managerID).Scan(&returnedID, &returnedName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+	result := entity.Department{}
+	result.Id = returnedID
+	result.Name = returnedName
+	return &result, nil
 }
 
 func (r *DepartmentRepository) Delete(
 	ctx context.Context,
-	dept entity.Department,
+	deptID int,
+	managerID string,
+	logger logger.Logger,
 ) error {
-	return nil
+	// check if the department exists
+	var deptName string
+	query := `
+		SELECT 
+			departmentname
+		FROM department 
+		WHERE 
+			departmentid = $1
+			AND managerid = $2
+			AND isdeleted = FALSE;
+	`
+	err := r.db.QueryRow(ctx, query, deptID, managerID).Scan(&deptName)
+	if err != nil {
+		logger.Error(
+			fmt.Sprint("first error"),
+			helper.DepartmentServiceDelete,
+			err,
+		)
+		return err
+	}
+	if deptName == "" {
+		logger.Error(
+			fmt.Sprint("second error"),
+			helper.DepartmentServiceDelete,
+			err,
+		)
+		return helper.ErrNotFound
+	}
+	// check if the department has employees assigned
+	var employeeCount int64
+	query = `
+		SELECT COUNT(*)
+		FROM employee
+		WHERE 
+			departmentid = $1
+			AND isdeleted = FALSE;
+	`
+	err = r.db.QueryRow(ctx, query, deptID).Scan(&employeeCount)
+	if err != nil {
+		logger.Error(
+			fmt.Sprint("third error"),
+			helper.DepartmentServiceDelete,
+			err,
+		)
+		return err
+	}
+	logger.Info(
+		fmt.Sprint("total"),
+		helper.DepartmentServiceDelete,
+		employeeCount,
+	)
+	if employeeCount > 0 {
+		logger.Error(
+			fmt.Sprint("fourth error"),
+			helper.DepartmentServiceDelete,
+			err,
+		)
+		return helper.ErrConflict
+	}
+	// update the isdeleted flag
+	query = `
+		UPDATE department
+		SET isdeleted = TRUE
+		WHERE 
+			departmentid = $1
+			AND managerid = $2
+			AND isdeleted = FALSE;
+	`
+	_, err = r.db.Exec(ctx, query, deptID, managerID)
+	return err
 }

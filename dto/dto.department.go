@@ -2,8 +2,8 @@ package dto
 
 type RequestDepartment struct {
 	DepartmentName string `json:"name" validate:"required,min=4,max=33"`
-	Limit          int    `json:"limit"`
-	Offset         int    `json:"offset"`
+	Limit          int    `json:"limit,omitempty"`
+	Offset         int    `json:"offset,omitempty"`
 }
 
 type ResponseSingleDepartment struct {
