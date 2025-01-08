@@ -12,7 +12,7 @@ import (
 
 type EmployeeService interface {
 	Create(input dto.EmployeePayload, managerId string) error
-	GetEmployees(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error)
+	GetAll(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error)
 }
 
 type service struct {
@@ -44,20 +44,10 @@ func (s *service) Create(input dto.EmployeePayload, managerId string) error {
 	return nil
 }
 
-func (s *service) GetEmployees(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
-	param := &dto.GetEmployeesRequest{
-		Limit:          input.Limit,
-		Offset:         input.Offset,
-		IdentityNumber: input.IdentityNumber,
-		Name:           input.Name,
-		Gender:         input.Gender,
-		DepartmentID:   input.DepartmentID,
-		ManagerID:      input.ManagerID,
-	}
-
-	employees, err := s.employeeRepo.GetEmployees(context.Background(), param)
+func (s *service) GetAll(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
+	employees, err := s.employeeRepo.GetAll(context.Background(), &input)
 	if err != nil {
-		s.logger.Error(err.Error(), helper.EmployeeServiceGet, param)
+		s.logger.Error(err.Error(), helper.EmployeeServiceGet, input)
 		return []dto.EmployeePayload{}, err
 	}
 

@@ -17,7 +17,7 @@ import (
 
 type EmployeeHandler interface {
 	Create(ctx *gin.Context)
-	GetEmployees(ctx *gin.Context)
+	GetAll(ctx *gin.Context)
 }
 
 type handler struct {
@@ -88,7 +88,7 @@ func (h *handler) Create(ctx *gin.Context) {
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
 // @Router /v1/employee [GET]
-func (h handler) GetEmployees(ctx *gin.Context) {
+func (h handler) GetAll(ctx *gin.Context) {
 	input := new(dto.GetEmployeesRequest)
 
 	setGetEmployeeRequest(ctx, input)
@@ -108,7 +108,7 @@ func (h handler) GetEmployees(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.service.GetEmployees(*input)
+	response, err := h.service.GetAll(*input)
 
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))

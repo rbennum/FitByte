@@ -62,7 +62,7 @@ func (r *EmployeeRepository) Create(ctx context.Context, input *dto.EmployeePayl
 	return nil
 }
 
-func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
+func (r *EmployeeRepository) GetAll(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
 	// Membuat query dinamis
 	query := "SELECT e.identityNumber, e.name, e.employeeImageUri, e.gender, e.departmentId" // 'e' refer to 'employee e' which will be appended later
 	conditions := "WHERE m.managerId = $1"                                                   // 'u' refer to 'manager u' which will be appended later
