@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
 	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/logger"
 )
 
 type DepartmentRepository struct {
@@ -115,7 +114,6 @@ func (r *DepartmentRepository) Delete(
 	ctx context.Context,
 	deptID int,
 	managerID string,
-	logger logger.Logger,
 ) error {
 	// check if the department exists
 	var deptName string
@@ -130,19 +128,9 @@ func (r *DepartmentRepository) Delete(
 	`
 	err := r.db.QueryRow(ctx, query, deptID, managerID).Scan(&deptName)
 	if err != nil {
-		logger.Error(
-			fmt.Sprint("first error"),
-			helper.DepartmentServiceDelete,
-			err,
-		)
 		return err
 	}
 	if deptName == "" {
-		logger.Error(
-			fmt.Sprint("second error"),
-			helper.DepartmentServiceDelete,
-			err,
-		)
 		return helper.ErrNotFound
 	}
 	// check if the department has employees assigned
@@ -156,24 +144,9 @@ func (r *DepartmentRepository) Delete(
 	`
 	err = r.db.QueryRow(ctx, query, deptID).Scan(&employeeCount)
 	if err != nil {
-		logger.Error(
-			fmt.Sprint("third error"),
-			helper.DepartmentServiceDelete,
-			err,
-		)
 		return err
 	}
-	logger.Info(
-		fmt.Sprint("total"),
-		helper.DepartmentServiceDelete,
-		employeeCount,
-	)
 	if employeeCount > 0 {
-		logger.Error(
-			fmt.Sprint("fourth error"),
-			helper.DepartmentServiceDelete,
-			err,
-		)
 		return helper.ErrConflict
 	}
 	// update the isdeleted flag

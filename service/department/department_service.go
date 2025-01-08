@@ -124,7 +124,7 @@ func (s *service) Delete(id string, managerID string) error {
 		)
 		return err
 	}
-	err = s.repo.Delete(context.Background(), deptID, managerID, s.logger)
+	err = s.repo.Delete(context.Background(), deptID, managerID)
 	if err != nil {
 		s.logger.Error(
 			err.Error(),
