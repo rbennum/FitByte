@@ -18,7 +18,7 @@ func NewEmployeeRepository(db *pgxpool.Pool) EmployeeRepository {
 	return EmployeeRepository{db: db}
 }
 
-func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.GetEmployeeResponseItem, error) {
+func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
 	// Membuat query dinamis
 	query := "SELECT e.identityNumber, e.name, e.employeeImageUri, e.gender, e.departmentId" // 'e' refer to 'employee e' which will be appended later
 	conditions := "WHERE m.managerId = $1"                                                   // 'u' refer to 'manager u' which will be appended later
@@ -80,9 +80,9 @@ func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmp
 	}
 	defer rows.Close()
 
-	var employees []dto.GetEmployeeResponseItem
+	var employees []dto.EmployeePayload
 	for rows.Next() {
-		var employee dto.GetEmployeeResponseItem
+		var employee dto.EmployeePayload
 		err := rows.Scan(
 			&employee.IdentityNumber,
 			&employee.Name,

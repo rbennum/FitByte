@@ -10,7 +10,7 @@ import (
 )
 
 type EmployeeService interface {
-	GetEmployees(input dto.GetEmployeesRequest) ([]dto.GetEmployeeResponseItem, error)
+	GetEmployees(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error)
 }
 
 type service struct {
@@ -28,7 +28,7 @@ func NewEmployeeService(
 	}
 }
 
-func (s *service) GetEmployees(input dto.GetEmployeesRequest) ([]dto.GetEmployeeResponseItem, error) {
+func (s *service) GetEmployees(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
 	param := &dto.GetEmployeesRequest{
 		Limit:          input.Limit,
 		Offset:         input.Offset,
@@ -42,7 +42,7 @@ func (s *service) GetEmployees(input dto.GetEmployeesRequest) ([]dto.GetEmployee
 	employees, err := s.employeeRepo.GetEmployees(context.Background(), param)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.EmployeeServiceGet, param)
-		return []dto.GetEmployeeResponseItem{}, err
+		return []dto.EmployeePayload{}, err
 	}
 
 	return employees, nil
