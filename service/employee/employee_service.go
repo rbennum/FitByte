@@ -2,6 +2,7 @@ package user_service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
@@ -10,6 +11,7 @@ import (
 )
 
 type EmployeeService interface {
+	Create(input dto.EmployeePayload, managerId string) error
 	GetEmployees(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error)
 }
 
@@ -26,6 +28,20 @@ func NewEmployeeService(
 		employeeRepo: employeeRepo,
 		logger:       logger,
 	}
+}
+
+func (s *service) Create(input dto.EmployeePayload, managerId string) error {
+	err := s.employeeRepo.Create(context.Background(), &input, managerId)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.EmployeeServiceGet, err)
+		if strings.Contains(err.Error(), "23505") {
+			return helper.ErrConflict
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (s *service) GetEmployees(input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {

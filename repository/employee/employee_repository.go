@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/dto"
+	"github.com/levensspel/go-gin-template/helper"
 )
 
 type EmployeeRepository struct {
@@ -16,6 +17,49 @@ type EmployeeRepository struct {
 
 func NewEmployeeRepository(db *pgxpool.Pool) EmployeeRepository {
 	return EmployeeRepository{db: db}
+}
+
+func (r *EmployeeRepository) Create(ctx context.Context, input *dto.EmployeePayload, managerId string) error {
+	// Check if department ID is owned by the valid manager
+	// altogether with the insertion only if its valid within single query.
+	query := `
+		WITH valid_department AS (
+				SELECT 1
+				FROM department
+				WHERE departmentId = $5 AND managerId = $6
+		)
+		INSERT INTO employees (
+			identityNumber,
+			name,
+			employeeImageUri,
+			gender,
+			departmentId
+		)
+		SELECT $1, $2, $3, $4, $5
+		FROM valid_department
+		WHERE EXISTS (SELECT 1 FROM valid_department);
+	`
+
+	rows, err := r.db.Exec(
+		ctx,
+		query,
+		input.IdentityNumber,
+		input.Name,
+		input.EmployeeImageUri,
+		input.Gender,
+		input.DepartmentID,
+		managerId,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if rows.RowsAffected() < 1 {
+		return helper.ErrInvalidDepartmentId
+	}
+
+	return nil
 }
 
 func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {

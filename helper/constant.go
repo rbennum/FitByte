@@ -16,7 +16,11 @@ const (
 	UserServiceDeleteByID FunctionCaller = "userService.DeleteById"
 	UserServiceGetProfile FunctionCaller = "userService.GetProfile"
 
-	EmployeeServiceGet FunctionCaller = "employeeService.Get"
+	EmployeeHandlerCreate       FunctionCaller = "EmployeeHandler.Create"
+	EmployeeHandlerGetEmployees FunctionCaller = "EmployeeHandler.GetEmployees"
+
+	EmployeeServiceCreate FunctionCaller = "employeeService.Create"
+	EmployeeServiceGet    FunctionCaller = "employeeService.Get"
 
 	GenerateFromPassword FunctionCaller = "GenerateFromPassword"
 

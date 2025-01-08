@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
@@ -15,6 +16,7 @@ import (
 )
 
 type EmployeeHandler interface {
+	Create(ctx *gin.Context)
 	GetEmployees(ctx *gin.Context)
 }
 
@@ -25,6 +27,53 @@ type handler struct {
 
 func NewEmployeeHandler(service service.EmployeeService, logger logger.Logger) EmployeeHandler {
 	return &handler{service: service, logger: logger}
+}
+
+// Create a new employee
+// @Tags employee
+// @Summary Create a new employee
+// @Description Create a new employee
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer JWT token"
+// @Param data body dto.EmployeePayload true "data"
+// @Success 201 {object} helper.Response{data=helper.Response} "Created"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorized"
+// @Failure 409 {object} helper.Response{errors=helper.ErrorResponse} "Conflict"
+// @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
+// @Router /v1/employee [POST]
+func (h *handler) Create(ctx *gin.Context) {
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil || uuid.Validate(managerID) != nil {
+		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate)
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
+		return
+	}
+
+	input := new(dto.EmployeePayload)
+
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate, input)
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrBadRequest), helper.NewResponse(nil, err))
+		return
+	}
+
+	err = validation.ValidateEmployeeCreate(input)
+	if err != nil {
+		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate, input)
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrBadRequest), helper.NewResponse(nil, err))
+		return
+	}
+
+	err = h.service.Create(*input, managerID)
+	if err != nil {
+		h.logger.Error(err.Error(), helper.EmployeeHandlerCreate)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, input)
 }
 
 // Get employee
