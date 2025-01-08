@@ -1,8 +1,51 @@
 definitions:
+  dto.EmployeePayload:
+    properties:
+      departmentId:
+        type: string
+      employeeImageUri:
+        type: string
+      gender:
+        type: string
+      identityNumber:
+        maxLength: 33
+        minLength: 5
+        type: string
+      name:
+        maxLength: 33
+        minLength: 4
+        type: string
+    required:
+    - departmentId
+    - employeeImageUri
+    - gender
+    - identityNumber
+    - name
+    type: object
   dto.FileUploadRespondPayload:
     properties:
       uri:
         type: string
+    type: object
+  dto.GetEmployeesRequest:
+    properties:
+      departmentID:
+        type: string
+      gender:
+        type: string
+      identityNumber:
+        description: validate is not set to `uuid` due to it allows wildcard
+        type: string
+      limit:
+        minimum: 0
+        type: integer
+      managerID:
+        type: string
+      name:
+        type: string
+      offset:
+        minimum: 0
+        type: integer
     type: object
   dto.RequestDepartment:
     properties:
@@ -317,6 +360,123 @@ paths:
       summary: Update a single record of department
       tags:
       - department
+  /v1/employee:
+    get:
+      consumes:
+      - application/json
+      description: Get employees
+      parameters:
+      - description: Bearer + user token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetEmployeesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "401":
+          description: Unauthorization
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Get employees
+      tags:
+      - employees
+    post:
+      consumes:
+      - application/json
+      description: Create a new employee
+      parameters:
+      - description: Bearer JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EmployeePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Create a new employee
+      tags:
+      - employee
   /v1/file:
     post:
       consumes:
@@ -333,12 +493,6 @@ paths:
         name: File
         required: true
         type: file
-      - description: Body with file zip
-        in: body
-        name: FileType
-        required: true
-        schema:
-          type: string
       produces:
       - application/json
       responses:

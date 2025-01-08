@@ -90,7 +90,7 @@ func (h *handler) Create(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "Bearer + user token"
-// @Param data body dto.EmployeeRequestGet true "data"
+// @Param data body dto.GetEmployeesRequest true "data"
 // @Success 200 {object} helper.Response{data=helper.Response} "OK"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
