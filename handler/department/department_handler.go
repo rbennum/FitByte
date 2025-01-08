@@ -12,6 +12,7 @@ import (
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/department"
+	"github.com/samber/do/v2"
 )
 
 type DepartmentHandler interface {
@@ -31,6 +32,12 @@ func New(
 	logger logger.Logger,
 ) DepartmentHandler {
 	return &handler{service: service, logger: logger}
+}
+
+func NewInject(i do.Injector) (DepartmentHandler, error) {
+	_service := do.MustInvoke[service.DepartmentService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return New(_service, &_logger), nil
 }
 
 // Create a new department

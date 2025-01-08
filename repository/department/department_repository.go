@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
 	"github.com/levensspel/go-gin-template/helper"
+	"github.com/samber/do/v2"
 )
 
 type DepartmentRepository struct {
@@ -17,6 +18,11 @@ type DepartmentRepository struct {
 
 func New(db *pgxpool.Pool) DepartmentRepository {
 	return DepartmentRepository{db: db}
+}
+
+func NewInject(i do.Injector) (DepartmentRepository, error) {
+	db := do.MustInvoke[*pgxpool.Pool](i)
+	return New(db), nil
 }
 
 func (r *DepartmentRepository) Create(

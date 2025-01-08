@@ -9,6 +9,7 @@ import (
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/department"
+	"github.com/samber/do/v2"
 )
 
 type DepartmentService interface {
@@ -28,6 +29,12 @@ func New(repo repositories.DepartmentRepository, logger logger.Logger) Departmen
 		repo:   repo,
 		logger: logger,
 	}
+}
+
+func NewInject(i do.Injector) (DepartmentService, error) {
+	_repo := do.MustInvoke[repositories.DepartmentRepository](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return New(_repo, &_logger), nil
 }
 
 func (s *service) Create(

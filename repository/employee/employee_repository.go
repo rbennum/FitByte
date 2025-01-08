@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
+	"github.com/samber/do/v2"
 )
 
 type EmployeeRepository struct {
@@ -17,6 +18,11 @@ type EmployeeRepository struct {
 
 func NewEmployeeRepository(db *pgxpool.Pool) EmployeeRepository {
 	return EmployeeRepository{db: db}
+}
+
+func NewEmployeeRepositoryInject(i do.Injector) (EmployeeRepository, error) {
+	db := do.MustInvoke[*pgxpool.Pool](i)
+	return NewEmployeeRepository(db), nil
 }
 
 func (r *EmployeeRepository) Create(ctx context.Context, input *dto.EmployeePayload, managerId string) error {
