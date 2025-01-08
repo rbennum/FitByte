@@ -22,17 +22,24 @@ func NewUserRepositoryInject(i do.Injector) (UserRepository, error) {
 	return NewUserRepository(db), nil
 }
 
-func (r *UserRepository) Create(ctx context.Context, user entity.User) error {
+func (r *UserRepository) Create(ctx context.Context, user entity.User) (managerId string, err error) {
 	query := `
 		INSERT INTO manager (email, password)
 		VALUES ($1, $2)
+		RETURNING manager.managerid
 	`
 	fmt.Printf("email %s, password %s", user.Email.String, user.Password)
-	_, err := r.db.Exec(ctx, query,
+	row := r.db.QueryRow(ctx, query,
 		user.Email.String, // Email yang unik
 		user.Password,     // Kata sandi
 	)
-	return err
+
+	err = row.Scan(&managerId)
+	if err != nil {
+		return "", err
+	}
+
+	return managerId, err
 }
 func (r *UserRepository) Update(ctx context.Context, user entity.User) error {
 	query := `
