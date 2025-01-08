@@ -19,50 +19,50 @@ func NewEmployeeRepository(db *pgxpool.Pool) EmployeeRepository {
 }
 
 func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.GetEmployeeResponseItem, error) {
-	//	The constructed query if all the parameters are sent:
-	// `SELECT
-	// 		identity_number,
-	// 		name,
-	// 		gender,
-	// 		image_uri,
-	// 		department_id
-	// FROM employees
-	// WHERE
-	//  	manager_id = $1
-	// 		AND LOWER(identity_number) ILIKE $2 || '%'
-	// 		AND name ILIKE '%' || $2 || '%'"
-	// 		AND gender = $4
-	// 		AND department_id = $5
-	// LIMIT $5
-	// OFFSET $6`
-
-	query := "SELECT identitynumber, name, gender, employeeimageuri, departmentid"
-	conditions := "WHERE managerid = $1"
+	// Membuat query dinamis
+	query := "SELECT e.identityNumber, e.name, e.employeeImageUri, e.gender, e.departmentId" // 'e' refer to 'employee e' which will be appended later
+	conditions := "WHERE m.managerId = $1"                                                   // 'u' refer to 'manager u' which will be appended later
 	argIndex := 2
 	var args []interface{}
 	args = append(args, input.ManagerID)
 
+	// `SELECT
+	// 	e.identity_number,
+	// 	e.name,
+	// 	e.image_uri,
+	// 	e.gender,
+	// 	e.department_id
+	// FROM employees
+	// WHERE
+	//  manager_id = $1
+	// 	identity_number ILIKE $2%
+	// 	AND name ILIKE %$3%
+	// 	AND gender = $4
+	// 	AND department_id = $5
+	// LIMIT $5
+	// OFFSET $6`
+
 	if input.IdentityNumber != "" {
 		args = append(args, input.IdentityNumber)
-		conditions += fmt.Sprintf(" AND LOWER(identitynumber) ILIKE $%d || '%s'", argIndex, "%") // eg. "AND LOWER(identity_number) ILIKE $2 || '%'"
+		conditions += fmt.Sprintf(" AND LOWER(e.identityNumber) ILIKE $%d || '%s'", argIndex, "%") // eg. AND identity_number ILIKE $2 || '%'
 		argIndex++
 	}
 	if input.Name != "" {
 		args = append(args, input.Name)
-		conditions += fmt.Sprintf(" AND name ILIKE '%s' || $%d || '%s'", "%", argIndex, "%") // eg. "AND name ILIKE '%' || $2 || '%'"
+		conditions += fmt.Sprintf(" AND e.name ILIKE '%s' || $%d || '%s'", "%", argIndex, "%") // eg. AND name ILIKE %$2%
 		argIndex++
 	}
 	if input.Gender != "" {
 		args = append(args, input.Gender)
-		conditions += fmt.Sprintf(" AND gender = $%d", argIndex)
+		conditions += fmt.Sprintf(" AND e.gender = $%d", argIndex)
 		argIndex++
 	}
 	if input.DepartmentID != "" {
 		args = append(args, input.DepartmentID)
-		conditions += fmt.Sprintf(" AND departmentid = $%d", argIndex)
+		conditions += fmt.Sprintf(" AND e.departmentId = $%d", argIndex)
 		argIndex++
 	}
-	query = strings.TrimRight(query, ",") + " from employees "
+	query = strings.TrimRight(query, ",") + " FROM employees AS e LEFT JOIN department d ON e.departmentId = d.departmentId LEFT JOIN manager m ON d.managerId = m.managerId "
 
 	args = append(args, input.Limit)
 	conditions += fmt.Sprintf(" LIMIT $%d", argIndex)
@@ -72,8 +72,6 @@ func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmp
 	conditions += fmt.Sprintf(" OFFSET $%d;", argIndex)
 
 	query += conditions
-	fmt.Println(query)
-	fmt.Println(args...)
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -85,13 +83,11 @@ func (r *EmployeeRepository) GetEmployees(ctx context.Context, input *dto.GetEmp
 	var employees []dto.GetEmployeeResponseItem
 	for rows.Next() {
 		var employee dto.GetEmployeeResponseItem
-
-		// The employee's attributes depends on the order of written columns in the SQL query
 		err := rows.Scan(
 			&employee.IdentityNumber,
 			&employee.Name,
-			&employee.Gender,
 			&employee.EmployeeImageUri,
+			&employee.Gender,
 			&employee.DepartmentID,
 		)
 		if err != nil {
