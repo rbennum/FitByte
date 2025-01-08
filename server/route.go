@@ -6,13 +6,16 @@ import (
 	"github.com/levensspel/go-gin-template/di"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
 	departmentHandler "github.com/levensspel/go-gin-template/handler/department"
+	employeeHandler "github.com/levensspel/go-gin-template/handler/employee"
 	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	departmentRepository "github.com/levensspel/go-gin-template/repository/department"
+	employeeRepository "github.com/levensspel/go-gin-template/repository/employee"
 	fileRepository "github.com/levensspel/go-gin-template/repository/file"
 	departmentService "github.com/levensspel/go-gin-template/service/department"
+	employeeService "github.com/levensspel/go-gin-template/service/employee"
 	fileService "github.com/levensspel/go-gin-template/service/file"
 	"github.com/samber/do/v2"
 
@@ -40,6 +43,10 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 	fileHandler := fileHandler.NewHandler(fileService, logger)
 	deptHandler := departmentHandler.New(departmentService, logger)
+
+	employeeRepo := employeeRepository.NewEmployeeRepository(db)
+	employeeService := employeeService.NewEmployeeService(employeeRepo, logger)
+	employeeHdlr := employeeHandler.NewEmployeeHandler(employeeService, logger)
 
 	swaggerRoute := r.Group("/")
 	{
@@ -71,6 +78,11 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 			department.GET("", middleware.Authorization, deptHandler.GetAll)
 			department.PATCH("/:id", middleware.Authorization, deptHandler.Update)
 			department.DELETE("/:id", middleware.Authorization, deptHandler.Delete)
+		}
+
+		employee := controllers.Group("/employee")
+		{
+			employee.GET("", middleware.Authorization, employeeHdlr.GetEmployees)
 		}
 		// tambah route lainnya disini
 	}
