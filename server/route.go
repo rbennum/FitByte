@@ -3,12 +3,17 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/levensspel/go-gin-template/di"
 	authHandler "github.com/levensspel/go-gin-template/handler/auth"
+	departmentHandler "github.com/levensspel/go-gin-template/handler/department"
+	employeeHandler "github.com/levensspel/go-gin-template/handler/employee"
+	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
-	repositories "github.com/levensspel/go-gin-template/repository/user"
-	userService "github.com/levensspel/go-gin-template/service/user"
+	fileRepository "github.com/levensspel/go-gin-template/repository/file"
+	fileService "github.com/levensspel/go-gin-template/service/file"
+	"github.com/samber/do/v2"
 
 	_ "github.com/levensspel/go-gin-template/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -23,10 +28,14 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 	// 	// untuk memanfaatkan api versioning, uncomment dan pakai ini
 	// }
 
-	userRepo := repositories.NewUserRepository(db)
-	userService := userService.NewUserService(userRepo, logger)
-	userHdlr := userHandler.NewUserHandler(userService, logger)
-	authHandler := authHandler.NewHandler(userService, logger)
+	fileRepo := fileRepository.NewFileRepository(db)
+	fileService := fileService.NewFileService(fileRepo, logger)
+
+	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
+	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
+	fileHandler := fileHandler.NewHandler(fileService, logger)
+	deptHandler := do.MustInvoke[departmentHandler.DepartmentHandler](di.Injector)
+	employeeHdlr := do.MustInvoke[employeeHandler.EmployeeHandler](di.Injector)
 
 	swaggerRoute := r.Group("/")
 	{
@@ -41,11 +50,30 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 			auth.POST("", authHandler.Post)
 		}
 
+		file := controllers.Group("/file")
+		{
+			file.POST("", middleware.Authorization, fileHandler.Upload)
+		}
+
 		user := controllers.Group("/user")
 		{
-			user.GET("", middleware.Authorization, userHdlr.GetProfile)
-			user.PUT("", middleware.Authorization, userHdlr.Update)
-			user.DELETE("", middleware.Authorization, userHdlr.Delete)
+			user.GET("", middleware.Authorization, userHandler.GetProfile)
+			user.PATCH("", middleware.Authorization, userHandler.UpdateProfile)
+			user.PUT("", middleware.Authorization, userHandler.Update)
+			user.DELETE("", middleware.Authorization, userHandler.Delete)
+		}
+		department := controllers.Group("/department")
+		{
+			department.POST("", middleware.Authorization, deptHandler.Create)
+			department.GET("", middleware.Authorization, deptHandler.GetAll)
+			department.PATCH("/:id", middleware.Authorization, deptHandler.Update)
+			department.DELETE("/:id", middleware.Authorization, deptHandler.Delete)
+		}
+
+		employee := controllers.Group("/employee")
+		{
+			employee.POST("", middleware.Authorization, employeeHdlr.Create)
+			employee.GET("", middleware.Authorization, employeeHdlr.GetAll)
 		}
 		// tambah route lainnya disini
 	}

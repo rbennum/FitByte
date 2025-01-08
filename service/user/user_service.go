@@ -1,11 +1,12 @@
-package user_service
+package userService
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/levensspel/go-gin-template/auth"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/entity"
@@ -13,33 +14,41 @@ import (
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/user"
 	"github.com/levensspel/go-gin-template/validation"
+	"github.com/samber/do/v2"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService interface {
+type IUserService interface {
 	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
 	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
-	GetProfile(id string) (*dto.ResposneGetProfile, error)
+	GetProfile(managerid string) (*dto.ResposneGetProfile, error)
+	UpdateProfile(managerid string, input dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error)
 }
 
-type service struct {
+type UserService struct {
 	userRepo repositories.UserRepository
-	logger   logger.Logger
+	logger   logger.LogHandler
 }
 
 func NewUserService(
 	userRepo repositories.UserRepository,
-	logger logger.Logger,
+	logger logger.LogHandler,
 ) UserService {
-	return &service{
+	return UserService{
 		userRepo: userRepo,
 		logger:   logger,
 	}
 }
 
-func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
+func NewUserServiceInject(i do.Injector) (UserService, error) {
+	_userRepo := do.MustInvoke[repositories.UserRepository](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewUserService(_userRepo, _logger), nil
+}
+
+func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 
 	if err != nil {
@@ -48,8 +57,7 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 
 	user := entity.User{}
 
-	user.Id = uuid.New().String()
-	user.Email = input.Email
+	user.Email.String = input.Email
 	user.CreatedAt = time.Now().Unix()
 	user.UpdatedAt = time.Now().Unix()
 
@@ -61,7 +69,7 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 	}
 	user.Password = string(passwordHash)
 
-	err = s.userRepo.Create(context.Background(), user)
+	user.Id, err = s.userRepo.Create(context.Background(), user)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "23505") {
@@ -72,21 +80,30 @@ func (s *service) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegist
 		}
 	}
 
+	jwtService := auth.NewJWTService()
+	token, err := jwtService.GenerateToken(user.Id)
+
+	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceRegister, err)
+		return dto.ResponseRegister{}, err
+	}
+
 	response := dto.ResponseRegister{
-		Email: user.Email,
-		Token: user.Id,
+		Email: user.Email.String,
+		Token: token,
 	}
 
 	return response, nil
 }
 
-func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
+func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
 	err := validation.ValidateUserLogin(input)
 	if err != nil {
 		return dto.ResponseLogin{}, err
 	}
 
 	//get user
+	fmt.Printf("email %s", input.Email)
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.GetUserbyEmail"), input)
@@ -112,16 +129,16 @@ func (s *service) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	}
 
 	response := dto.ResponseLogin{}
-	response.Email = user[0].Email
+	response.Email = user[0].Email.String
 	response.Token = token
 	return response, nil
 }
 
-func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
+func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 	user := entity.User{}
 	user.Id = input.Id
 	user.Username.String = input.Username
-	user.Email = input.Email
+	user.Email.String = input.Email
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 
 	if err != nil {
@@ -144,7 +161,7 @@ func (s *service) Update(input dto.RequestRegister) (dto.Response, error) {
 	return response, nil
 }
 
-func (s *service) DeleteByID(id string) error {
+func (s *UserService) DeleteByID(id string) error {
 	err := s.userRepo.Delete(context.Background(), id)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
@@ -153,7 +170,8 @@ func (s *service) DeleteByID(id string) error {
 	return err
 }
 
-func (s *service) GetProfile(id string) (*dto.ResposneGetProfile, error) {
+// Get manager profile by their id
+func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 	profile, err := s.userRepo.GetProfile(context.Background(), id)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
@@ -161,10 +179,54 @@ func (s *service) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 	}
 	result := dto.ResposneGetProfile{
 		Email:           profile.Email,
-		Name:            profile.Name,
-		UserImageUri:    profile.UserImageUri,
-		CompanyName:     profile.CompanyName,
-		CompanyImageUri: profile.CompanyImageUri,
+		Name:            profile.Name.String,
+		UserImageUri:    profile.UserImageUri.String,
+		CompanyName:     profile.CompanyName.String,
+		CompanyImageUri: profile.CompanyImageUri.String,
 	}
 	return &result, nil
+}
+
+// Update manager profile by their id
+func (s *UserService) UpdateProfile(id string, req dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error) {
+	profile, err := s.userRepo.GetProfile(context.Background(), id)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
+		return nil, err
+	}
+
+	if req.Email != nil {
+		profile.Email = *req.Email
+	}
+	if req.Name != nil {
+		profile.Name = ToNullString(req.Name)
+	}
+	if req.UserImageUri != nil {
+		profile.UserImageUri = ToNullString(req.UserImageUri)
+	}
+	if req.CompanyName != nil {
+		profile.CompanyName = ToNullString(req.CompanyName)
+	}
+	if req.CompanyImageUri != nil {
+		profile.CompanyImageUri = ToNullString(req.CompanyImageUri)
+	}
+
+	s.userRepo.UpdateProfile(context.Background(), id, profile)
+
+	result := dto.RequestUpdateProfile{
+		Email:           &profile.Email,
+		Name:            &profile.Name.String,
+		UserImageUri:    &profile.UserImageUri.String,
+		CompanyName:     &profile.CompanyName.String,
+		CompanyImageUri: &profile.CompanyImageUri.String,
+	}
+
+	return &result, nil
+}
+
+func ToNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{String: "", Valid: false}
+	}
+	return sql.NullString{String: *s, Valid: true}
 }

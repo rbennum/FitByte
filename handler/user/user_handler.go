@@ -9,12 +9,14 @@ import (
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 )
 
 type UserHandler interface {
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
 	GetProfile(ctx *gin.Context)
+	UpdateProfile(ctx *gin.Context)
 }
 
 type handler struct {
@@ -24,6 +26,12 @@ type handler struct {
 
 func NewUserHandler(service service.UserService, logger logger.Logger) UserHandler {
 	return &handler{service: service, logger: logger}
+}
+
+func NewUserHandlerInject(i do.Injector) (UserHandler, error) {
+	_service := do.MustInvoke[service.UserService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewUserHandler(_service, &_logger), nil
 }
 
 // Update user
@@ -101,6 +109,40 @@ func (h handler) GetProfile(ctx *gin.Context) {
 	}
 
 	response, err := h.service.GetProfile(id)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+}
+
+// Update profile
+// @Tags users
+// @Summary Update profile
+// @Description Update profile
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "Bearer + user token"
+// @Param data body dto.RequestUpdateProfile true "data"
+// @Success 200 {object} helper.Response{data=helper.Response} "OK"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
+// @Router /v1/user [PATCH]
+func (h handler) UpdateProfile(ctx *gin.Context) {
+	id, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	req := new(dto.RequestUpdateProfile)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn(err.Error(), helper.UserHandler, &req)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	response, err := h.service.UpdateProfile(id, *req)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return

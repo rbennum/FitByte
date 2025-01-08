@@ -1,6 +1,7 @@
 package authHandler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	service "github.com/levensspel/go-gin-template/service/user"
+	"github.com/samber/do/v2"
 )
 
 type AuthorizationHandler interface {
@@ -22,6 +24,12 @@ type handler struct {
 
 func NewHandler(service service.UserService, logger logger.Logger) AuthorizationHandler {
 	return &handler{service: service, logger: logger}
+}
+
+func NewHandlerInject(i do.Injector) (AuthorizationHandler, error) {
+	_service := do.MustInvoke[service.UserService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewHandler(_service, &_logger), nil
 }
 
 // Entry for authentication or create new user
@@ -40,7 +48,7 @@ func (h handler) Post(ctx *gin.Context) {
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		h.logger.Warn(err.Error(), helper.FunctionCaller("AuthHandler.Post"), &input)
-		ctx.JSON(http.StatusUnprocessableEntity, helper.NewResponse(nil, err))
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return
 	}
 
@@ -79,6 +87,7 @@ func (h handler) Post(ctx *gin.Context) {
 		}
 	case dto.Login:
 		// do login
+		fmt.Printf("input %s", *input)
 		response, err := h.service.Login(*input)
 
 		if err != nil {

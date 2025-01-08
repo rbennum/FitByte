@@ -1,10 +1,12 @@
-package repositories
+package userRepository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
+	"github.com/samber/do/v2"
 )
 
 type UserRepository struct {
@@ -15,35 +17,48 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 	return UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user entity.User) error {
+func NewUserRepositoryInject(i do.Injector) (UserRepository, error) {
+	db := do.MustInvoke[*pgxpool.Pool](i)
+	return NewUserRepository(db), nil
+}
+
+func (r *UserRepository) Create(ctx context.Context, user entity.User) (managerId string, err error) {
 	query := `
-		INSERT INTO users (email, password)
+		INSERT INTO manager (email, password)
 		VALUES ($1, $2)
+		RETURNING manager.managerid
 	`
-	_, err := r.db.Exec(ctx, query,
-		user.Email,    // Email yang unik
-		user.Password, // Kata sandi
+	fmt.Printf("email %s, password %s", user.Email.String, user.Password)
+	row := r.db.QueryRow(ctx, query,
+		user.Email.String, // Email yang unik
+		user.Password,     // Kata sandi
 	)
-	return err
+
+	err = row.Scan(&managerId)
+	if err != nil {
+		return "", err
+	}
+
+	return managerId, err
 }
 func (r *UserRepository) Update(ctx context.Context, user entity.User) error {
 	query := `
-		UPDATE users
+		UPDATE manager
 		SET name = $2, password = $3, updated_at = $4
 		WHERE id = $1
 	`
 	_, err := r.db.Exec(ctx, query,
-		user.Id,        // UID
-		user.Name,      // Nama
-		user.Password,  // Kata sandi
-		user.UpdatedAt, // Timestamp saat ini
+		user.Id,          // UID
+		user.Name.String, // Nama
+		user.Password,    // Kata sandi
+		user.UpdatedAt,   // Timestamp saat ini
 	)
 	return err
 }
 
 func (r *UserRepository) UpsertUser(ctx context.Context, user entity.User) error {
 	query := `
-		INSERT INTO users (identitynumber, name, username, email, password, updated_at, created_at)
+		INSERT INTO manager (identitynumber, name, username, email, password, updated_at, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (id) DO UPDATE SET
 			name = EXCLUDED.name,
@@ -55,19 +70,19 @@ func (r *UserRepository) UpsertUser(ctx context.Context, user entity.User) error
 	`
 
 	_, err := r.db.Exec(ctx, query,
-		user.Id,        // UUID, jika kosong gunakan default UUID
-		user.Name,      // Nama pengguna
-		user.Username,  // Username yang unik
-		user.Email,     // Email yang unik
-		user.Password,  // Kata sandi
-		user.UpdatedAt, // Timestamp saat ini
-		user.CreatedAt, // Timestamp saat dibuat
+		user.Id,              // UUID, jika kosong gunakan default UUID
+		user.Name.String,     // Nama pengguna
+		user.Username.String, // Username yang unik
+		user.Email.String,    // Email yang unik
+		user.Password,        // Kata sandi
+		user.UpdatedAt,       // Timestamp saat ini
+		user.CreatedAt,       // Timestamp saat dibuat
 	)
 	return err
 }
 
 func (r *UserRepository) GetAllUsers(ctx context.Context) ([]entity.User, error) {
-	query := `SELECT identitynumber, name, email FROM users`
+	query := `SELECT managerid, name, email FROM manager`
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -88,7 +103,8 @@ func (r *UserRepository) GetAllUsers(ctx context.Context) ([]entity.User, error)
 
 func (r *UserRepository) GetUserbyEmail(ctx context.Context, email string) ([]entity.User, error) {
 	// Menggunakan Query bukan Exec karena kita mengambil hasil dari SELECT
-	query := `SELECT u.identitynumber, u.name, u.email, u.password FROM users u WHERE email = $1`
+	query := `SELECT u.managerid, u.name, u.email, u.password FROM manager u WHERE u.email = $1`
+	fmt.Printf("\nthefuck email %s\n", email)
 	rows, err := r.db.Query(ctx, query, email)
 	if err != nil {
 		return nil, err
@@ -114,7 +130,7 @@ func (r *UserRepository) GetUserbyEmail(ctx context.Context, email string) ([]en
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM users WHERE id = ?`
+	query := `DELETE FROM manager WHERE managerid = ?`
 	_, err := r.db.Query(ctx, query, id)
 	return err
 }
@@ -122,7 +138,7 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 func (r *UserRepository) GetProfile(ctx context.Context, id string) (*entity.GetProfile, error) {
 	row := r.db.QueryRow(
 		ctx,
-		`SELECT email, name, userImageUri, companyName, companyImageUri FROM users WHERE identitynumber = $1`,
+		`SELECT email, name, userImageUri, companyName, companyImageUri FROM manager WHERE managerid = $1`,
 		id,
 	)
 
@@ -134,4 +150,24 @@ func (r *UserRepository) GetProfile(ctx context.Context, id string) (*entity.Get
 
 	return &user, nil
 
+}
+
+func (r *UserRepository) UpdateProfile(ctx context.Context, id string, data *entity.GetProfile) error {
+	_, err := r.db.Exec(
+		ctx,
+		`UPDATE manager SET 
+			email= $1, 
+			name=$2, 
+			userImageUri=$3, 
+			companyName=$4, 
+			companyImageUri=$5
+		WHERE managerid = $6`,
+		data.Email,
+		data.Name.String,
+		data.UserImageUri.String,
+		data.CompanyName.String,
+		data.CompanyImageUri.String,
+		id,
+	)
+	return err
 }
