@@ -13,6 +13,7 @@ import (
 	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/employee"
 	"github.com/levensspel/go-gin-template/validation"
+	"github.com/samber/do/v2"
 )
 
 type EmployeeHandler interface {
@@ -27,6 +28,12 @@ type handler struct {
 
 func NewEmployeeHandler(service service.EmployeeService, logger logger.Logger) EmployeeHandler {
 	return &handler{service: service, logger: logger}
+}
+
+func NewEmployeeHandlerInject(i do.Injector) (EmployeeHandler, error) {
+	_service := do.MustInvoke[service.EmployeeService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewEmployeeHandler(_service, &_logger), nil
 }
 
 // Create a new employee

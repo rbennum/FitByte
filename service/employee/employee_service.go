@@ -8,6 +8,7 @@ import (
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/employee"
+	"github.com/samber/do/v2"
 )
 
 type EmployeeService interface {
@@ -28,6 +29,12 @@ func NewEmployeeService(
 		employeeRepo: employeeRepo,
 		logger:       logger,
 	}
+}
+
+func NewEmployeeServiceInject(i do.Injector) (EmployeeService, error) {
+	_repo := do.MustInvoke[repositories.EmployeeRepository](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	return NewEmployeeService(_repo, &_logger), nil
 }
 
 func (s *service) Create(input dto.EmployeePayload, managerId string) error {
