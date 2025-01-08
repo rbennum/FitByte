@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/levensspel/go-gin-template/auth"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/entity"
@@ -56,7 +55,6 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 
 	user := entity.User{}
 
-	user.Id = uuid.New().String()
 	user.Email.String = input.Email
 	user.CreatedAt = time.Now().Unix()
 	user.UpdatedAt = time.Now().Unix()
@@ -69,7 +67,7 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 	}
 	user.Password = string(passwordHash)
 
-	err = s.userRepo.Create(context.Background(), user)
+	user.Id, err = s.userRepo.Create(context.Background(), user)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "23505") {
@@ -80,9 +78,17 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 		}
 	}
 
+	jwtService := auth.NewJWTService()
+	token, err := jwtService.GenerateToken(user.Id)
+
+	if err != nil {
+		s.logger.Error(err.Error(), helper.UserServiceRegister, err)
+		return dto.ResponseRegister{}, err
+	}
+
 	response := dto.ResponseRegister{
 		Email: user.Email.String,
-		Token: user.Id,
+		Token: token,
 	}
 
 	return response, nil
