@@ -5,9 +5,9 @@
 -- DROP TABLE public.employees;
 
 CREATE TABLE public.employees (
-	id varchar(255) NOT NULL,
+	id varchar(255) NOT NULL DEFAULT gen_random_uuid(),
 	"name" varchar(255) NOT NULL,
-	identitynumber varchar(255) NOT NULL,
+	identitynumber varchar(255) NOT NULL UNIQUE,
 	employeeimageuri varchar(255) NOT NULL,
 	gender varchar(6) NOT NULL,
 	departmentid varchar NOT NULL,
@@ -20,3 +20,7 @@ CREATE TABLE public.employees (
 -- public.employees foreign keys
 
 ALTER TABLE public.employees ADD CONSTRAINT fk_manager FOREIGN KEY (departmentid) REFERENCES public.department(departmentid);
+
+ALTER TABLE public.employees ADD CONSTRAINT unique_employee_identitynumber UNIQUE (identitynumber);
+
+ALTER TABLE public.employees ALTER COLUMN id SET DEFAULT gen_random_uuid();
