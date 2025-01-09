@@ -56,10 +56,13 @@ func (s *service) Create(ctx context.Context, input dto.EmployeePayload, manager
 		return err
 	}
 
-	err = s.employeeRepo.IsIdentityNumberAvailable(ctx, txPool, input.IdentityNumber, managerId)
+	exist, err := s.employeeRepo.IsIdentityNumberExist(ctx, txPool, input.IdentityNumber, managerId)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.EmployeeServiceGet, err)
 		return err
+	}
+	if exist {
+		return helper.ErrConflictIdentityNumber
 	}
 
 	err = s.employeeRepo.Insert(ctx, txPool, &input, managerId)

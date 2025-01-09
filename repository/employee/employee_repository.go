@@ -40,26 +40,23 @@ func (r *EmployeeRepository) IsDepartmentOwnedByManager(ctx context.Context, poo
 	return nil
 }
 
-func (r *EmployeeRepository) IsIdentityNumberAvailable(ctx context.Context, pool *pgxpool.Tx, identityNumber, managerId string) error {
+func (r *EmployeeRepository) IsIdentityNumberExist(ctx context.Context, pool *pgxpool.Tx, identityNumber, managerId string) (bool, error) {
 	query := `
 		SELECT 1 
 		FROM employees e
 		JOIN department d
 		ON e.departmentId = d.departmentId
 		WHERE
-			identityNumber = $1
-			AND managerId = $2;
+			e.identityNumber = $1
+			AND d.managerId = $2
+			AND d.isDeleted = FALSE;
 	`
 	rows, err := r.db.Exec(ctx, query, identityNumber, managerId)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if rows.RowsAffected() > 0 {
-		return helper.ErrConflictIdentityNumber
-	}
-
-	return nil
+	return rows.RowsAffected() > 0, nil
 }
 
 func (r *EmployeeRepository) Insert(ctx context.Context, pool *pgxpool.Tx, input *dto.EmployeePayload, managerId string) error {
