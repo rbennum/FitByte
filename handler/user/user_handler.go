@@ -9,6 +9,7 @@ import (
 	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
 	service "github.com/levensspel/go-gin-template/service/user"
+	"github.com/levensspel/go-gin-template/validation"
 	"github.com/samber/do/v2"
 )
 
@@ -138,6 +139,12 @@ func (h handler) UpdateProfile(ctx *gin.Context) {
 	req := new(dto.RequestUpdateProfile)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn(err.Error(), helper.UserHandler, &req)
+		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		return
+	}
+
+	err = validation.ValidateUpdateProfile(*req)
+	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
 	}
