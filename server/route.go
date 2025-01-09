@@ -59,7 +59,6 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 		{
 			user.GET("", middleware.Authorization, userHandler.GetProfile)
 			user.PATCH("", middleware.Authorization, userHandler.UpdateProfile)
-			user.PUT("", middleware.Authorization, userHandler.Update)
 			user.DELETE("", middleware.Authorization, userHandler.Delete)
 		}
 		department := controllers.Group("/department")
