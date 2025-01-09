@@ -195,6 +195,13 @@ func (s *UserService) UpdateProfile(id string, req dto.RequestUpdateProfile) (*d
 		return nil, err
 	}
 
+	if req.Email != nil && *req.Email != profile.Email {
+		user, err := s.userRepo.GetUserbyEmail(context.Background(), *req.Email)
+		if err != nil || len(user) != 0 {
+			return nil, helper.ErrConflict
+		}
+	}
+
 	if req.Email != nil {
 		profile.Email = *req.Email
 	}
