@@ -27,3 +27,11 @@ type GetEmployeesRequest struct {
 	DepartmentID   string `query:"departmentId" validate:"omitempty,uuid"`
 	ManagerID      string `query:"managerId" validate:"omitempty,uuid"`
 }
+
+type UpdateEmployeeRequest struct {
+	IdentityNumber   string `json:"identityNumber" validate:"omitempty,min=5,max=33"`
+	Name             string `json:"name" validate:"omitempty,min=4,max=33"`
+	EmployeeImageUri string `json:"employeeImageUri" validate:"omitempty,uri"`
+	Gender           string `json:"gender" validate:"omitempty"`
+	DepartmentID     string `json:"departmentId" validate:"omitempty,uuid"`
+}

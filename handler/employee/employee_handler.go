@@ -19,6 +19,7 @@ import (
 type EmployeeHandler interface {
 	Create(ctx *gin.Context)
 	GetAll(ctx *gin.Context)
+	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
 }
 
@@ -138,6 +139,66 @@ func (h handler) GetAll(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+}
+
+// Update a employee
+// @Tags employee
+// @Summary Update a employee
+// @Description Update a employee
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer JWT token"
+// @Param identityNumber path string true "identityNumber"
+// @Param data body dto.EmployeePayload true "data"
+// @Success 200 {object} helper.Response{data=helper.Response} "Ok"
+// @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorized"
+// @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Not Found"
+// @Failure 409 {object} helper.Response{errors=helper.ErrorResponse} "Conflict"
+// @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
+// @Router /v1/employee [PATCH]
+func (h *handler) Update(ctx *gin.Context) {
+	defer helper.FallbackResponse(ctx)
+
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
+		return
+	}
+
+	identityNumber := ctx.Param("identityNumber")
+	if len(identityNumber) < dto.IdentityNumberMinLength {
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, helper.ErrBadRequest))
+		return
+	}
+
+	input := new(dto.UpdateEmployeeRequest)
+
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrBadRequest), helper.NewResponse(nil, err))
+		return
+	}
+
+	err = validation.ValidateEmployeeUpdate(input)
+	if err != nil {
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrBadRequest), helper.NewResponse(nil, err))
+		return
+	}
+
+	employee, err := h.service.Update(ctx, *input, identityNumber, managerID)
+	if err != nil {
+		h.logger.Error(err.Error(), helper.EmployeeHandlerUpdate)
+		ctx.JSON(
+			helper.GetErrorStatusCode(err),
+			helper.NewResponse(
+				nil,
+				errors.New((helper.GetErrorMessage(err)))),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, employee)
+	return
 }
 
 // Delete a employee

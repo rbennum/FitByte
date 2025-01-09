@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/dto"
+	"github.com/levensspel/go-gin-template/entity"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/samber/do/v2"
 )
@@ -25,19 +26,15 @@ func NewEmployeeRepositoryInject(i do.Injector) (EmployeeRepository, error) {
 	return NewEmployeeRepository(db), nil
 }
 
-func (r *EmployeeRepository) IsDepartmentOwnedByManager(ctx context.Context, pool *pgxpool.Tx, departmentId, managerId string) error {
+func (r *EmployeeRepository) IsDepartmentOwnedByManager(ctx context.Context, pool *pgxpool.Tx, departmentId, managerId string) (bool, error) {
 	query := "SELECT 1 FROM department WHERE departmentId = $1 AND managerId = $2;"
 
 	rows, err := pool.Exec(ctx, query, departmentId, managerId)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if rows.RowsAffected() < 1 {
-		return helper.ErrInvalidDepartmentId
-	}
-
-	return nil
+	return rows.RowsAffected() > 0, nil
 }
 
 func (r *EmployeeRepository) IsIdentityNumberExist(ctx context.Context, pool *pgxpool.Tx, identityNumber, managerId string) (bool, error) {
@@ -120,8 +117,87 @@ func (r *EmployeeRepository) Insert(ctx context.Context, pool *pgxpool.Tx, input
 	return nil
 }
 
+func (r *EmployeeRepository) Update(ctx context.Context, pool *pgxpool.Tx, input entity.Employee) (dto.EmployeePayload, error) {
+	query := "UPDATE employees SET "
+	argIndex := 1
+	var args []interface{}
+
+	// `UPDATE employees
+	// SET
+	// 	identityNumber = $1,
+	// 	name = $2,
+	// 	employeeImageUri = $3,
+	// 	gender = $4,
+	// 	departmentId = $5
+	// WHERE id = $6
+	// RETURNING identityNumber, name, employeeImageUri, gender, departmentId`
+
+	if input.Id == "" {
+		return dto.EmployeePayload{}, helper.ErrBadRequest
+	}
+
+	if input.IdentityNumber != "" {
+		query += fmt.Sprintf(" identityNumber = $%d,", argIndex)
+		args = append(args, input.IdentityNumber)
+		argIndex++
+	}
+	if input.Name != "" {
+		query += fmt.Sprintf(" name = $%d,", argIndex)
+		args = append(args, input.Name)
+		argIndex++
+	}
+	if input.EmployeeImageUri != "" {
+		query += fmt.Sprintf(" employeeImageUri = $%d,", argIndex)
+		args = append(args, input.EmployeeImageUri)
+		argIndex++
+	}
+	if input.Gender != "" {
+		query += fmt.Sprintf(" gender = $%d,", argIndex)
+		args = append(args, input.Gender)
+		argIndex++
+	}
+	if input.DepartmentId != "" {
+		query += fmt.Sprintf(" departmentId = $%d", argIndex)
+		args = append(args, input.DepartmentId)
+		argIndex++
+	}
+
+	query = strings.TrimRight(query, ",") + fmt.Sprintf(" WHERE employees.id = $%d ", argIndex)
+	args = append(args, input.Id)
+
+	query += "RETURNING identityNumber, name, employeeImageUri, gender, departmentId"
+
+	rows, err := pool.Query(ctx, query, args...)
+	if err != nil {
+		return dto.EmployeePayload{}, err
+	}
+
+	var employee dto.EmployeePayload
+
+	for rows.Next() {
+		err = rows.Scan(
+			&employee.IdentityNumber,
+			&employee.Name,
+			&employee.EmployeeImageUri,
+			&employee.Gender,
+			&employee.DepartmentID,
+		)
+		if err != nil {
+			return dto.EmployeePayload{}, err
+		}
+	}
+	fmt.Println(
+		employee.IdentityNumber,
+		employee.Name,
+		employee.EmployeeImageUri,
+		employee.Gender,
+		employee.DepartmentID,
+	)
+
+	return employee, nil
+}
+
 func (r *EmployeeRepository) GetAll(ctx context.Context, input *dto.GetEmployeesRequest) ([]dto.EmployeePayload, error) {
-	// Membuat query dinamis
 	query := "SELECT e.identityNumber, e.name, e.employeeImageUri, e.gender, e.departmentId" // 'e' refer to 'employee e' which will be appended later
 	conditions := "WHERE m.managerId = $1"                                                   // 'u' refer to 'manager u' which will be appended later
 	argIndex := 2
@@ -131,7 +207,7 @@ func (r *EmployeeRepository) GetAll(ctx context.Context, input *dto.GetEmployees
 	// `SELECT
 	// 	e.identity_number,
 	// 	e.name,
-	// 	e.image_uri,
+	// 	e.employeeImageUri,
 	// 	e.gender,
 	// 	e.department_id
 	// FROM employees
