@@ -25,6 +25,77 @@ func NewEmployeeRepositoryInject(i do.Injector) (EmployeeRepository, error) {
 	return NewEmployeeRepository(db), nil
 }
 
+func (r *EmployeeRepository) IsDepartmentOwnedByManager(ctx context.Context, pool *pgxpool.Tx, departmentId, managerId string) error {
+	query := "SELECT 1 FROM department WHERE departmentId = $1 AND managerId = $2;"
+
+	rows, err := pool.Exec(ctx, query, departmentId, managerId)
+	if err != nil {
+		return err
+	}
+
+	if rows.RowsAffected() < 1 {
+		return helper.ErrInvalidDepartmentId
+	}
+
+	return nil
+}
+
+func (r *EmployeeRepository) IsIdentityNumberAvailable(ctx context.Context, pool *pgxpool.Tx, identityNumber, managerId string) error {
+	query := `
+		SELECT 1 
+		FROM employees e
+		JOIN department d
+		ON e.departmentId = d.departmentId
+		WHERE
+			identityNumber = $1
+			AND managerId = $2;
+	`
+	rows, err := r.db.Exec(ctx, query, identityNumber, managerId)
+	if err != nil {
+		return err
+	}
+
+	if rows.RowsAffected() > 0 {
+		return helper.ErrConflictIdentityNumber
+	}
+
+	return nil
+}
+
+func (r *EmployeeRepository) Insert(ctx context.Context, pool *pgxpool.Tx, input *dto.EmployeePayload, managerId string) error {
+	// Check if department ID is owned by the valid manager
+	// altogether with the insertion only if its valid within single query.
+	query := `
+		INSERT INTO employees (
+			identityNumber,
+			name,
+			employeeImageUri,
+			gender,
+			departmentId
+		)
+		VALUES ($1, $2, $3, $4, $5);
+	`
+	rows, err := pool.Exec(
+		ctx,
+		query,
+		input.IdentityNumber,
+		input.Name,
+		input.EmployeeImageUri,
+		input.Gender,
+		input.DepartmentID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if rows.RowsAffected() < 1 {
+		return helper.ErrInvalidDepartmentId
+	}
+
+	return nil
+}
+
 func (r *EmployeeRepository) Create(ctx context.Context, input *dto.EmployeePayload, managerId string) error {
 	// Check if department ID is owned by the valid manager
 	// altogether with the insertion only if its valid within single query.
