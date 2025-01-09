@@ -60,6 +60,23 @@ definitions:
     required:
     - name
     type: object
+  dto.RequestUpdateProfile:
+    properties:
+      companyImageUri:
+        type: string
+      companyName:
+        maxLength: 52
+        minLength: 4
+        type: string
+      email:
+        type: string
+      name:
+        maxLength: 52
+        minLength: 4
+        type: string
+      userImageUri:
+        type: string
+    type: object
   dto.UserRequestPayload:
     properties:
       action:
@@ -364,7 +381,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get employees
+      description: Get employee
       parameters:
       - description: Bearer + user token
         in: header
@@ -407,9 +424,9 @@ paths:
                 errors:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
-      summary: Get employees
+      summary: Get employee
       tags:
-      - employees
+      - employee
     post:
       consumes:
       - application/json
@@ -647,6 +664,55 @@ paths:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
       summary: Get Profile User
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update profile
+      parameters:
+      - description: Bearer + user token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestUpdateProfile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "401":
+          description: Unauthorization
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Update profile
       tags:
       - users
     put:
