@@ -21,6 +21,10 @@ CREATE TABLE public.employees (
 
 ALTER TABLE public.employees ADD CONSTRAINT fk_manager FOREIGN KEY (departmentid) REFERENCES public.department(departmentid);
 
-ALTER TABLE public.employees ADD CONSTRAINT unique_employee_identitynumber UNIQUE (identitynumber);
+-- Previously created this constraint, but need to remove due to requirement adjustment
+-- ALTER TABLE public.employees ADD CONSTRAINT unique_employee_identitynumber UNIQUE (identitynumber);
+
+-- Use this query to remove the unique constarint on identityNumber
+-- ALTER TABLE public.employees DROP CONSTRAINT unique_employee_identitynumber;
 
 ALTER TABLE public.employees ALTER COLUMN id SET DEFAULT gen_random_uuid();

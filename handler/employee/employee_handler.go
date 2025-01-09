@@ -1,12 +1,12 @@
 package employeeHandler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
@@ -51,8 +51,10 @@ func NewEmployeeHandlerInject(i do.Injector) (EmployeeHandler, error) {
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/employee [POST]
 func (h *handler) Create(ctx *gin.Context) {
+	defer helper.FallbackResponse(ctx)
+
 	managerID, err := middleware.GetIdUserFromContext(ctx)
-	if err != nil || uuid.Validate(managerID) != nil {
+	if err != nil {
 		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate)
 		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
 		return
@@ -73,14 +75,20 @@ func (h *handler) Create(ctx *gin.Context) {
 		return
 	}
 
-	err = h.service.Create(*input, managerID)
+	err = h.service.Create(ctx, *input, managerID)
 	if err != nil {
 		h.logger.Error(err.Error(), helper.EmployeeHandlerCreate)
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		ctx.JSON(
+			helper.GetErrorStatusCode(err),
+			helper.NewResponse(
+				nil,
+				errors.New((helper.GetErrorMessage(err)))),
+		)
 		return
 	}
 
 	ctx.JSON(http.StatusOK, input)
+	return
 }
 
 // Get employee
@@ -96,6 +104,8 @@ func (h *handler) Create(ctx *gin.Context) {
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
 // @Router /v1/employee [GET]
 func (h handler) GetAll(ctx *gin.Context) {
+	defer helper.FallbackResponse(ctx)
+
 	input := new(dto.GetEmployeesRequest)
 
 	setGetEmployeeRequest(ctx, input)
@@ -115,10 +125,15 @@ func (h handler) GetAll(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.service.GetAll(*input)
+	response, err := h.service.GetAll(ctx, *input)
 
 	if err != nil {
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		ctx.JSON(
+			helper.GetErrorStatusCode(err),
+			helper.NewResponse(
+				nil,
+				errors.New((helper.GetErrorMessage(err)))),
+		)
 		return
 	}
 	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
