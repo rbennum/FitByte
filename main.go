@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/levensspel/go-gin-template/cache"
 	"github.com/levensspel/go-gin-template/di"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/levensspel/go-gin-template/server"
@@ -11,6 +15,17 @@ import (
 
 func main() {
 	healthCheckDI()
+
+	// Handle graceful shutdown
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	defer cache.Cache.Close()
+
+	go func() {
+		<-sig
+		cache.Cache.Close()
+		os.Exit(0)
+	}()
 
 	err := server.Start()
 	if err != nil {
