@@ -483,7 +483,7 @@ const docTemplate = `{
         },
         "/v1/employee": {
             "get": {
-                "description": "Get employees",
+                "description": "Get employee",
                 "consumes": [
                     "application/json"
                 ],
@@ -491,9 +491,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employees"
+                    "employee"
                 ],
-                "summary": "Get employees",
+                "summary": "Get employee",
                 "parameters": [
                     {
                         "type": "string",
@@ -1095,6 +1095,93 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "description": "Update profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer + user token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RequestUpdateProfile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/helper.Response"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/definitions/helper.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorization",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/definitions/helper.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
             }
         }
     },
@@ -1183,6 +1270,30 @@ const docTemplate = `{
                 },
                 "offset": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.RequestUpdateProfile": {
+            "type": "object",
+            "properties": {
+                "companyImageUri": {
+                    "type": "string"
+                },
+                "companyName": {
+                    "type": "string",
+                    "maxLength": 52,
+                    "minLength": 4
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 52,
+                    "minLength": 4
+                },
+                "userImageUri": {
+                    "type": "string"
                 }
             }
         },

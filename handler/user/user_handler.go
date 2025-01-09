@@ -114,7 +114,7 @@ func (h handler) GetProfile(ctx *gin.Context) {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
 	}
-	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+	ctx.JSON(http.StatusOK, response)
 }
 
 // Update profile
@@ -154,5 +154,5 @@ func (h handler) UpdateProfile(ctx *gin.Context) {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
 	}
-	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+	ctx.JSON(http.StatusOK, response)
 }

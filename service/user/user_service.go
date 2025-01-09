@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/levensspel/go-gin-template/cache"
 	"strings"
 	"time"
 
@@ -17,6 +18,8 @@ import (
 	"github.com/samber/do/v2"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const IsUserReadHeavy = true // Caching is suitable for read heavy operations
 
 type IUserService interface {
 	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
@@ -50,9 +53,13 @@ func NewUserServiceInject(i do.Injector) (UserService, error) {
 
 func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
-
 	if err != nil {
 		return dto.ResponseRegister{}, err
+	}
+
+	_, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
+	if found {
+		return dto.ResponseRegister{}, fmt.Errorf("email %s is already in use", input.Email)
 	}
 
 	user := entity.User{}
@@ -102,6 +109,15 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 		return dto.ResponseLogin{}, err
 	}
 
+	// Check cache first
+	cachedToken, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
+	if found {
+		return dto.ResponseLogin{
+			Email: input.Email,
+			Token: cachedToken,
+		}, nil
+	}
+
 	//get user
 	fmt.Printf("email %s", input.Email)
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
@@ -128,6 +144,9 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 		return dto.ResponseLogin{}, err
 	}
 
+	// Put to cache
+	cache.Set(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email), token)
+
 	response := dto.ResponseLogin{}
 	response.Email = user[0].Email.String
 	response.Token = token
@@ -153,6 +172,19 @@ func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
 		return dto.Response{}, err
 	}
+
+	if IsUserReadHeavy {
+		// Put to cache
+		profileToCache := map[string]string{
+			"email":           user.Email.String,
+			"name":            user.Name.String,
+			"userImageUri":    "", // TODO: Handle once retrieved in request
+			"companyName":     "", // TODO: Handle once retrieved in request
+			"companyImageUri": "", // TODO: Handle once retrieved in request
+		}
+		cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, user.Id), profileToCache)
+	}
+
 	response := dto.Response{}
 	response.Id = input.Id
 	response.Email = input.Email
@@ -162,6 +194,8 @@ func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 }
 
 func (s *UserService) DeleteByID(id string) error {
+	cache.Delete(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+
 	err := s.userRepo.Delete(context.Background(), id)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
@@ -172,11 +206,37 @@ func (s *UserService) DeleteByID(id string) error {
 
 // Get manager profile by their id
 func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
+
+	// Get from cache
+	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+	if found {
+		return &dto.ResposneGetProfile{
+			Email:           cachedProfile["email"],
+			Name:            cachedProfile["name"],
+			UserImageUri:    cachedProfile["userImageUri"],
+			CompanyName:     cachedProfile["companyName"],
+			CompanyImageUri: cachedProfile["companyImageUri"],
+		}, nil
+	}
+
 	profile, err := s.userRepo.GetProfile(context.Background(), id)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
 		return nil, err
 	}
+
+	if IsUserReadHeavy {
+		// Put to cache
+		profileToCache := map[string]string{
+			"email":           profile.Email,
+			"name":            profile.Name.String,
+			"userImageUri":    profile.UserImageUri.String,
+			"companyName":     profile.CompanyName.String,
+			"companyImageUri": profile.CompanyImageUri.String,
+		}
+		cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id), profileToCache)
+	}
+
 	result := dto.ResposneGetProfile{
 		Email:           profile.Email,
 		Name:            profile.Name.String,
