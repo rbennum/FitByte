@@ -145,7 +145,7 @@ func (h handler) UpdateProfile(ctx *gin.Context) {
 
 	err = validation.ValidateUpdateProfile(*req)
 	if err != nil {
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return
 	}
 
