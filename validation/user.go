@@ -39,3 +39,14 @@ func ValidateUserLogin(input dto.UserRequestPayload) error {
 
 	return nil
 }
+
+func ValidateUpdateProfile(input dto.RequestUpdateProfile) error {
+	err := validate.Struct(input)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		for _, fieldError := range validationErrors {
+			return fieldError
+		}
+	}
+	return nil
+}
