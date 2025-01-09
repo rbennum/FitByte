@@ -11,8 +11,10 @@ const (
 	MaxCacheSize = 256 << 20 //  256 MB
 	DefaultTtl   = 30 * time.Minute
 
-	CacheAuthEmailToToken = "auth:%s"
-	CacheUserIdToProfile  = "user:%s"
+	CacheAuthEmailToToken      = "auth:%s"
+	CacheUserIdToProfile       = "user:%s"
+	CacheEmployeesWithParams   = "employees:%s"
+	CacheDepartmentsWithParams = "departments:%s"
 )
 
 var Cache *ristretto.Cache[string, string]
@@ -46,6 +48,28 @@ func SetAsMap(key string, value map[string]string) {
 	SetWithCost(key, string(data), cost)
 }
 
+func SetAsMapArrayWithTtlAndCostMultiplier(
+	key string,
+	value []map[string]string,
+	costMultiplier int,
+	ttl time.Duration,
+) {
+	data, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	totalCost := int64(len(key))
+	for _, v := range value {
+		for k, str := range v {
+			stringCost := int64(len(k)) + int64(len(str))
+			totalCost += stringCost
+		}
+	}
+
+	Cache.SetWithTTL(key, string(data), totalCost*int64(costMultiplier), ttl)
+}
+
 func SetWithCost(key string, value string, cost int64) {
 	Cache.SetWithTTL(key, value, cost, DefaultTtl)
 }
@@ -61,6 +85,21 @@ func GetAsMap(key string) (map[string]string, bool) {
 	}
 
 	var result map[string]string
+	err := json.Unmarshal([]byte(val), &result)
+	if err != nil {
+		panic(err)
+	}
+
+	return result, true
+}
+
+func GetAsMapArray(key string) ([]map[string]string, bool) {
+	val, found := Cache.Get(key)
+	if !found {
+		return nil, false
+	}
+
+	var result []map[string]string
 	err := json.Unmarshal([]byte(val), &result)
 	if err != nil {
 		panic(err)

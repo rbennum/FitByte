@@ -3,13 +3,20 @@ package departmentService
 import (
 	"context"
 	"fmt"
+	"github.com/levensspel/go-gin-template/cache"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/department"
 	"github.com/samber/do/v2"
+)
+
+const (
+	defaultTtl = 5 * time.Minute // Department data won't more stale than 5 mins
 )
 
 type DepartmentService interface {
@@ -64,6 +71,21 @@ func (s *service) GetAll(
 	managerID string,
 	input dto.RequestDepartment,
 ) ([]dto.ResponseSingleDepartment, error) {
+	cacheKey := s.generateCacheKey(managerID, input)
+
+	// Check cache
+	cachedDepartments, found := cache.GetAsMapArray(cacheKey)
+	if found {
+		result := make([]dto.ResponseSingleDepartment, len(cachedDepartments))
+		for i, department := range cachedDepartments {
+			result[i] = dto.ResponseSingleDepartment{
+				DepartmentID:   department["id"],
+				DepartmentName: department["name"],
+			}
+		}
+		return result, nil
+	}
+
 	rows, err := s.repo.GetAll(
 		context.Background(),
 		input.DepartmentName,
@@ -79,6 +101,18 @@ func (s *service) GetAll(
 		)
 		return nil, err
 	}
+
+	// Put to cache
+	costMultiplier := s.calculateCostMultiplier(input)
+	departmentsToCache := make([]map[string]string, len(rows))
+	for i, row := range rows {
+		departmentsToCache[i] = map[string]string{
+			"id":   row.Id,
+			"name": row.Name,
+		}
+	}
+	cache.SetAsMapArrayWithTtlAndCostMultiplier(cacheKey, departmentsToCache, costMultiplier, defaultTtl)
+
 	results := []dto.ResponseSingleDepartment{}
 	for _, item := range rows {
 		result := dto.ResponseSingleDepartment{}
@@ -140,4 +174,39 @@ func (s *service) Delete(id string, managerID string) error {
 		)
 	}
 	return err
+}
+
+func (s *service) generateCacheKey(managerId string, input dto.RequestDepartment) string {
+	// Serialize params into a string (e.g., "name=Jono&gender=male")
+	var filterParts []string
+
+	filterParts = append(filterParts, fmt.Sprintf("limit=%d", input.Limit))
+	filterParts = append(filterParts, fmt.Sprintf("offset=%d", input.Offset))
+	filterParts = append(filterParts, fmt.Sprintf("managerId=%s", managerId))
+	filterParts = append(filterParts, fmt.Sprintf("name=%s", input.DepartmentName))
+
+	filters := strings.Join(filterParts, "&")
+	return fmt.Sprintf(cache.CacheDepartmentsWithParams, filters)
+}
+
+func (s *service) calculateCostMultiplier(input dto.RequestDepartment) int {
+	// The more likely it is to be searched, the more beneficial it is to cache
+	// By setting higher cost, it will be more likely to be cached and less likely to be evicted
+
+	// No filter
+	noFilter := input.DepartmentName == ""
+	if noFilter {
+		if input.Offset == 1 {
+			// First page
+			return 4
+		} else if input.Offset == 2 {
+			// Second page
+			return 3
+		} else {
+			// Subsequent pages
+			return 2
+		}
+	} else {
+		return 1
+	}
 }
