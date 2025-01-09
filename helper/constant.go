@@ -18,9 +18,11 @@ const (
 
 	EmployeeHandlerCreate       FunctionCaller = "EmployeeHandler.Create"
 	EmployeeHandlerGetEmployees FunctionCaller = "EmployeeHandler.GetEmployees"
+	EmployeeHandlerDelete       FunctionCaller = "EmployeeHandler.Delete"
 
 	EmployeeServiceCreate FunctionCaller = "employeeService.Create"
 	EmployeeServiceGet    FunctionCaller = "employeeService.Get"
+	EmployeeServiceDelete FunctionCaller = "employeeService.Delete"
 
 	GenerateFromPassword FunctionCaller = "GenerateFromPassword"
 

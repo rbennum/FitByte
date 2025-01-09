@@ -19,6 +19,7 @@ import (
 type EmployeeHandler interface {
 	Create(ctx *gin.Context)
 	GetAll(ctx *gin.Context)
+	Delete(ctx *gin.Context)
 }
 
 type handler struct {
@@ -137,6 +138,50 @@ func (h handler) GetAll(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+}
+
+// Delete a employee
+// @Tags employee
+// @Summary Delete a employee
+// @Description Delete a employee
+// @Accept path param
+// @Param Authorization header string true "Bearer + token"
+// @Param identityNumber path string true "identityNumber"
+// @Success 200 {object} helper.Response{data=helper.Response} "Created"
+// @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorized"
+// @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Not found"
+// @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
+// @Router /v1/employee/{idNumber} [DELETE]
+func (h *handler) Delete(ctx *gin.Context) {
+	defer helper.FallbackResponse(ctx)
+
+	managerID, err := middleware.GetIdUserFromContext(ctx)
+	if err != nil {
+		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate)
+		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
+		return
+	}
+
+	identityNumber := ctx.Param("identityNumber")
+	if len(identityNumber) < dto.IdentityNumberMinLength {
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, helper.ErrBadRequest))
+		return
+	}
+
+	err = h.service.Delete(ctx, identityNumber, managerID)
+	if err != nil {
+		h.logger.Error(err.Error(), helper.EmployeeHandlerDelete)
+		ctx.JSON(
+			helper.GetErrorStatusCode(err),
+			helper.NewResponse(
+				nil,
+				errors.New((helper.GetErrorMessage(err)))),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, helper.NewResponse(nil, nil))
+	return
 }
 
 func setGetEmployeeRequest(ctx *gin.Context, input *dto.GetEmployeesRequest) {

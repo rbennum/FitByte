@@ -15,6 +15,7 @@ import (
 type EmployeeService interface {
 	Create(ctx context.Context, input dto.EmployeePayload, managerId string) error
 	GetAll(ctx context.Context, input dto.GetEmployeesRequest) ([]dto.EmployeePayload, error)
+	Delete(ctx context.Context, identityNumber, managerId string) error
 }
 
 type service struct {
@@ -86,4 +87,31 @@ func (s *service) GetAll(ctx context.Context, input dto.GetEmployeesRequest) ([]
 	}
 
 	return employees, nil
+}
+
+func (s *service) Delete(ctx context.Context, identityNumber, managerId string) error {
+	pool, err := s.dbPool.Begin(ctx)
+	if err != nil {
+		return helper.ErrInternalServer
+	}
+	txPool := pool.(*pgxpool.Tx)
+	defer helper.RollbackOrCommit(ctx, txPool)
+
+	id, err := s.employeeRepo.GetEmployeeIdIfExist(ctx, txPool, identityNumber, managerId)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.EmployeeServiceDelete, err)
+		return err
+	}
+	if id == "" {
+		return helper.ErrNotFound
+	}
+
+	err = s.employeeRepo.Delete(ctx, txPool, id)
+	if err != nil {
+		s.logger.Error(err.Error(), helper.EmployeeServiceDelete, err)
+
+		return err
+	}
+
+	return nil
 }

@@ -6,6 +6,8 @@ const (
 
 	DefaultLimit  = 5
 	DefaultOffset = 0
+
+	IdentityNumberMinLength = 5
 )
 
 type EmployeePayload struct {

@@ -73,6 +73,7 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 		{
 			employee.POST("", middleware.Authorization, employeeHdlr.Create)
 			employee.GET("", middleware.Authorization, employeeHdlr.GetAll)
+			employee.DELETE(":identityNumber", middleware.Authorization, employeeHdlr.Delete)
 		}
 		// tambah route lainnya disini
 	}

@@ -51,12 +51,39 @@ func (r *EmployeeRepository) IsIdentityNumberExist(ctx context.Context, pool *pg
 			AND d.managerId = $2
 			AND d.isDeleted = FALSE;
 	`
-	rows, err := r.db.Exec(ctx, query, identityNumber, managerId)
+	rows, err := pool.Exec(ctx, query, identityNumber, managerId)
 	if err != nil {
 		return false, err
 	}
 
 	return rows.RowsAffected() > 0, nil
+}
+
+func (r *EmployeeRepository) GetEmployeeIdIfExist(ctx context.Context, pool *pgxpool.Tx, identityNumber, managerId string) (string, error) {
+	query := `
+		SELECT e.id 
+		FROM employees e
+		JOIN department d
+		ON e.departmentId = d.departmentId
+		WHERE
+			e.identityNumber = $1
+			AND d.managerId = $2
+			AND d.isDeleted = FALSE;
+	`
+	rows, err := pool.Query(ctx, query, identityNumber, managerId)
+	if err != nil {
+		return "", err
+	}
+
+	var id string
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return id, nil
 }
 
 func (r *EmployeeRepository) Insert(ctx context.Context, pool *pgxpool.Tx, input *dto.EmployeePayload, managerId string) error {
@@ -80,49 +107,6 @@ func (r *EmployeeRepository) Insert(ctx context.Context, pool *pgxpool.Tx, input
 		input.EmployeeImageUri,
 		input.Gender,
 		input.DepartmentID,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	if rows.RowsAffected() < 1 {
-		return helper.ErrInvalidDepartmentId
-	}
-
-	return nil
-}
-
-func (r *EmployeeRepository) Create(ctx context.Context, input *dto.EmployeePayload, managerId string) error {
-	// Check if department ID is owned by the valid manager
-	// altogether with the insertion only if its valid within single query.
-	query := `
-		WITH valid_department AS (
-				SELECT 1
-				FROM department
-				WHERE departmentId = $5 AND managerId = $6
-		)
-		INSERT INTO employees (
-			identityNumber,
-			name,
-			employeeImageUri,
-			gender,
-			departmentId
-		)
-		SELECT $1, $2, $3, $4, $5
-		FROM valid_department
-		WHERE EXISTS (SELECT 1 FROM valid_department);
-	`
-
-	rows, err := r.db.Exec(
-		ctx,
-		query,
-		input.IdentityNumber,
-		input.Name,
-		input.EmployeeImageUri,
-		input.Gender,
-		input.DepartmentID,
-		managerId,
 	)
 
 	if err != nil {
@@ -216,4 +200,15 @@ func (r *EmployeeRepository) GetAll(ctx context.Context, input *dto.GetEmployees
 	}
 
 	return employees, nil
+}
+
+func (r *EmployeeRepository) Delete(ctx context.Context, pool *pgxpool.Tx, employeeId string) error {
+	query := `DELETE FROM employees WHERE id = $1`
+
+	_, err := pool.Exec(ctx, query, employeeId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
