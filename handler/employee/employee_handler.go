@@ -138,7 +138,7 @@ func (h handler) GetAll(ctx *gin.Context) {
 		)
 		return
 	}
-	ctx.JSON(http.StatusOK, helper.NewResponse(response, nil))
+	ctx.JSON(http.StatusOK, response)
 }
 
 // Update a employee
