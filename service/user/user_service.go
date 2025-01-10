@@ -19,7 +19,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const IsUserReadHeavy = true // Caching is suitable for read heavy operations
+const (
+	isCachingBatchOfProfilesEnabled = true // Caching is suitable for read heavy operations
+	cacheDefaultTtl                 = 5 * time.Minute
+	maxMemoizedInvalidatedUserIds   = 100
+)
 
 type IUserService interface {
 	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
@@ -95,6 +99,10 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 		return dto.ResponseRegister{}, err
 	}
 
+	// Put to cache
+	cache.Set(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email), token)
+	appendToInvalidatedUserIds(user.Id)
+
 	response := dto.ResponseRegister{
 		Email: user.Email.String,
 		Token: token,
@@ -109,7 +117,7 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 		return dto.ResponseLogin{}, err
 	}
 
-	// Check cache first
+	// Get from cache
 	cachedToken, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
 	if found {
 		return dto.ResponseLogin{
@@ -173,17 +181,9 @@ func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 		return dto.Response{}, err
 	}
 
-	if IsUserReadHeavy {
-		// Put to cache
-		profileToCache := map[string]string{
-			"email":           user.Email.String,
-			"name":            user.Name.String,
-			"userImageUri":    "", // TODO: Handle once retrieved in request
-			"companyName":     "", // TODO: Handle once retrieved in request
-			"companyImageUri": "", // TODO: Handle once retrieved in request
-		}
-		cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, user.Id), profileToCache)
-	}
+	// Invalidate cache
+	cache.Delete(fmt.Sprintf(cache.CacheUserIdToProfile, input.Id))
+	appendToInvalidatedUserIds(input.Id)
 
 	response := dto.Response{}
 	response.Id = input.Id
@@ -194,7 +194,12 @@ func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 }
 
 func (s *UserService) DeleteByID(id string) error {
-	cache.Delete(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+	// Invalidate cache
+	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+	if found {
+		cache.Delete(fmt.Sprintf(cache.CacheAuthEmailToToken, cachedProfile["email"]))
+		cache.Delete(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+	}
 
 	err := s.userRepo.Delete(context.Background(), id)
 	if err != nil {
@@ -219,13 +224,48 @@ func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 		}, nil
 	}
 
-	profile, err := s.userRepo.GetProfile(context.Background(), id)
-	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
-		return nil, err
-	}
+	var profile *entity.GetProfile
+	var err error
 
-	if IsUserReadHeavy {
+	if isCachingBatchOfProfilesEnabled {
+		invalidatedUserIds := make([]string, 0)
+		v, found := cache.Get(cache.CacheInvalidatedUserIds)
+		if found {
+			invalidatedUserIds = strings.Split(v, ",")
+		}
+		invalidatedUserIds = append(invalidatedUserIds, id)
+
+		batchOfProfiles, err := s.userRepo.GetBatchOfProfiles(context.Background(), invalidatedUserIds)
+		if err != nil {
+			s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
+			return nil, err
+		}
+
+		for _, p := range batchOfProfiles {
+			if p.ManagerId == id {
+				profile = &p
+			}
+
+			// Put to cache
+			profileToCache := map[string]string{
+				"email":           profile.Email,
+				"name":            profile.Name.String,
+				"userImageUri":    profile.UserImageUri.String,
+				"companyName":     profile.CompanyName.String,
+				"companyImageUri": profile.CompanyImageUri.String,
+			}
+			cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id), profileToCache)
+		}
+
+		cache.Delete(cache.CacheInvalidatedUserIds)
+
+	} else {
+		profile, err = s.userRepo.GetProfile(context.Background(), id)
+		if err != nil {
+			s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
+			return nil, err
+		}
+
 		// Put to cache
 		profileToCache := map[string]string{
 			"email":           profile.Email,
@@ -249,17 +289,43 @@ func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 
 // Update manager profile by their id
 func (s *UserService) UpdateProfile(id string, req dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error) {
-	profile, err := s.userRepo.GetProfile(context.Background(), id)
-	if err != nil {
-		s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
-		return nil, err
+	var profile *entity.GetProfile
+	var err error
+
+	// Get from cache
+	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+	if found {
+		profile = &entity.GetProfile{
+			Email:           cachedProfile["email"],
+			Name:            sql.NullString{String: cachedProfile["name"], Valid: cachedProfile["name"] != ""},
+			UserImageUri:    sql.NullString{String: cachedProfile["userImageUri"], Valid: cachedProfile["userImageUri"] != ""},
+			CompanyName:     sql.NullString{String: cachedProfile["companyName"], Valid: cachedProfile["companyName"] != ""},
+			CompanyImageUri: sql.NullString{String: cachedProfile["companyImageUri"], Valid: cachedProfile["companyImageUri"] != ""},
+		}
+
+	} else {
+		profile, err = s.userRepo.GetProfile(context.Background(), id)
+		if err != nil {
+			s.logger.Error(err.Error(), helper.UserServiceGetProfile, err)
+			return nil, err
+		}
 	}
 
 	if req.Email != nil && *req.Email != profile.Email {
-		user, err := s.userRepo.GetUserbyEmail(context.Background(), *req.Email)
-		if err != nil || len(user) != 0 {
+		// Check cache
+		_, found := cache.GetAsMap(fmt.Sprintf(cache.CacheAuthEmailToToken, *req.Email))
+		if found {
 			return nil, helper.ErrConflict
+
+		} else {
+			user, err := s.userRepo.GetUserbyEmail(context.Background(), *req.Email)
+			if err != nil || len(user) != 0 {
+				return nil, helper.ErrConflict
+			}
 		}
+
+		// Email is updated, then invalidate old auth email cache
+		cache.Delete(fmt.Sprintf(cache.CacheAuthEmailToToken, profile.Email))
 	}
 
 	if req.Email != nil {
@@ -280,6 +346,10 @@ func (s *UserService) UpdateProfile(id string, req dto.RequestUpdateProfile) (*d
 
 	s.userRepo.UpdateProfile(context.Background(), id, profile)
 
+	// Invalidate profile cache
+	cache.Delete(fmt.Sprintf(cache.CacheUserIdToProfile, id))
+	appendToInvalidatedUserIds(id)
+
 	result := dto.RequestUpdateProfile{
 		Email:           &profile.Email,
 		Name:            &profile.Name.String,
@@ -296,4 +366,21 @@ func ToNullString(s *string) sql.NullString {
 		return sql.NullString{String: "", Valid: false}
 	}
 	return sql.NullString{String: *s, Valid: true}
+}
+
+func appendToInvalidatedUserIds(id string) {
+	invalidatedUserIds := make([]string, 0)
+	v, found := cache.Get(cache.CacheInvalidatedUserIds)
+	if found {
+		invalidatedUserIds = strings.Split(v, ",")
+	}
+
+	if len(invalidatedUserIds) >= maxMemoizedInvalidatedUserIds {
+		// Rooms for improvement: use circular buffer data structure
+		// To replace oldest data with new data
+		return
+	}
+
+	invalidatedUserIds = append(invalidatedUserIds, id)
+	cache.Set(cache.CacheInvalidatedUserIds, strings.Join(invalidatedUserIds, ","))
 }

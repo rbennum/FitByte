@@ -10,17 +10,18 @@ import (
 
 const (
 	MaxCacheSize = 256 << 20 //  256 MB
-	DefaultTtl   = 30 * time.Minute
+	DefaultTtl   = 5 * time.Minute
 
 	CacheAuthEmailToToken      = "auth:%s"
 	CacheUserIdToProfile       = "user:%s"
+	CacheInvalidatedUserIds    = "inv_usr" // Value is comma-separated, e.g., 1,3,5
 	CacheEmployeesWithParams   = "employees:%s"
 	CacheDepartmentsWithParams = "departments:%s"
 )
 
 var Cache *ristretto.Cache[string, string]
 
-func initialize() {
+func Initialize() {
 	var err error
 
 	Cache, err = ristretto.NewCache(&ristretto.Config[string, string]{
