@@ -205,7 +205,7 @@ func (h *handler) Update(ctx *gin.Context) {
 // @Tags employee
 // @Summary Delete a employee
 // @Description Delete a employee
-// @Accept path param
+// @Accept json
 // @Param Authorization header string true "Bearer + token"
 // @Param identityNumber path string true "identityNumber"
 // @Success 200 {object} helper.Response{data=helper.Response} "Created"

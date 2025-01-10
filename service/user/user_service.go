@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/levensspel/go-gin-template/cache"
+	"net/http"
 	"strings"
 	"time"
+
+	"github.com/levensspel/go-gin-template/cache"
 
 	"github.com/levensspel/go-gin-template/auth"
 	"github.com/levensspel/go-gin-template/dto"
@@ -54,7 +56,7 @@ func NewUserServiceInject(i do.Injector) (UserService, error) {
 func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 	if err != nil {
-		return dto.ResponseRegister{}, err
+		return dto.ResponseRegister{}, helper.NewErrorResponse(http.StatusBadRequest, err.Error())
 	}
 
 	_, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
@@ -106,7 +108,7 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
 	err := validation.ValidateUserLogin(input)
 	if err != nil {
-		return dto.ResponseLogin{}, err
+		return dto.ResponseLogin{}, helper.NewErrorResponse(http.StatusBadRequest, err.Error())
 	}
 
 	// Check cache first
@@ -126,7 +128,7 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 		return dto.ResponseLogin{}, err
 	}
 	if len(user) == 0 {
-		return dto.ResponseLogin{}, helper.ErrNotFound
+		return dto.ResponseLogin{}, helper.NewErrorResponse(http.StatusNotFound, helper.ErrNotFound.Error())
 	}
 
 	// password compared
