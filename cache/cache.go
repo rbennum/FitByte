@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -81,14 +80,12 @@ func Get(key string) (string, bool) {
 }
 
 func GetAsMap(key string) (map[string]string, bool) {
-	// 1. cari cache by key
 	val, found := Cache.Get(key)
-	// 2. if found
+
 	if !found {
 		return nil, false
 	}
-	fmt.Printf("=> Value found in cache : %s\n", val)
-	// deserialize json string to format
+
 	var result map[string]string
 	err := json.Unmarshal([]byte(val), &result)
 	if err != nil {
