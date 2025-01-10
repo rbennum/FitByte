@@ -20,11 +20,39 @@ services:
       - PORT=${PORT}
     networks:
       - sprint_network
+    restart: always
+    env_file:
+      - .env
+
+  go-appl-dev:
+    container_name: go-be-skeleton
+    image: p3t/go:runtime
+    build:
+      context: .
+      args:
+        - APP_PORT=${PORT}
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - MODE=${MODE}
+      - PROD_HOST=${PROD_HOST}
+      - DEBUG_HOST=${DEBUG_HOST}
+      - PORT=${PORT}
+    networks:
+      - sprint_network
     volumes:
       - .:/app
     restart: always
     env_file:
       - .env
+    profiles:
+      - local
+      - dev
 
   postgres:
     image: postgres:17.2
