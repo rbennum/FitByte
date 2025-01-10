@@ -13,8 +13,7 @@ CREATE TABLE public.department (
 	managerid varchar(255) NULL,
 	CONSTRAINT department_pkey1 PRIMARY KEY (departmentid)
 );
-
+CREATE INDEX department_name_idx_fulltext_gin ON public.department USING gin (to_tsvector('simple'::regconfig, (departmentname)::text));
 
 -- public.department foreign keys
-
 ALTER TABLE public.department ADD CONSTRAINT fk_manager FOREIGN KEY (managerid) REFERENCES public.manager(managerid);
