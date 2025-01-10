@@ -29,6 +29,14 @@ type UserRequestUpdate struct {
 	Email string `json:"email"`
 }
 
+type RequestUpdateProfile struct {
+	Email           *string `json:"email" validate:"omitempty,email"`
+	Name            *string `json:"name" validate:"omitempty,min=4,max=52"`
+	UserImageUri    *string `json:"userImageUri" validate:"omitempty,url"`
+	CompanyName     *string `json:"companyName" validate:"omitempty,min=4,max=52"`
+	CompanyImageUri *string `json:"companyImageUri" validate:"omitempty,url"`
+}
+
 // Responses
 type Response struct {
 	Id       string `json:"id,omitempty"`

@@ -94,9 +94,9 @@ func (h *handler) Create(ctx *gin.Context) {
 }
 
 // Get employee
-// @Tags employees
-// @Summary Get employees
-// @Description Get employees
+// @Tags employee
+// @Summary Get employee
+// @Description Get employee
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "Bearer + user token"
