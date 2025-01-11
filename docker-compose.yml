@@ -1,7 +1,7 @@
 services:
   go-appl:
     container_name: go-be-skeleton
-    image: prasasdidzul/projeksprintb3-p1:runtime
+    image: timdebug/p1:runtime
     build:
       context: .
       args:
@@ -18,6 +18,9 @@ services:
       - PROD_HOST=${PROD_HOST}
       - DEBUG_HOST=${DEBUG_HOST}
       - PORT=${PORT}
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
     networks:
       - sprint_network
     restart: always
@@ -26,7 +29,7 @@ services:
 
   go-appl-dev:
     container_name: go-be-skeleton
-    image: prasasdidzul/projeksprintb3-p1:runtime
+    image: timdebug/p1:runtime
     build:
       context: .
       args:
@@ -43,6 +46,9 @@ services:
       - PROD_HOST=${PROD_HOST}
       - DEBUG_HOST=${DEBUG_HOST}
       - PORT=${PORT}
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
     networks:
       - sprint_network
     volumes:
