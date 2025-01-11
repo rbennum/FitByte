@@ -89,6 +89,8 @@ func (s *service) Create(ctx context.Context, input dto.EmployeePayload, manager
 		return err
 	}
 
+	invalidateCache()
+
 	return nil
 }
 
@@ -179,6 +181,9 @@ func (s *service) Update(ctx context.Context, input dto.UpdateEmployeeRequest, i
 
 		return dto.EmployeePayload{}, err
 	}
+
+	invalidateCache()
+
 	return dto.EmployeePayload{
 		Name:             employee.Name,
 		IdentityNumber:   employee.IdentityNumber,
@@ -212,10 +217,14 @@ func (s *service) Delete(ctx context.Context, identityNumber, managerId string) 
 		return err
 	}
 
+	invalidateCache()
+
 	return nil
 }
 
 func (s *service) generateCacheKey(input dto.GetEmployeesRequest) string {
+	namespaceVersion := cache.EmployeeNamespaceVersion.Load()
+
 	// Serialize params into a string (e.g., "name=Jono&gender=male")
 	var filterParts []string
 
@@ -227,7 +236,7 @@ func (s *service) generateCacheKey(input dto.GetEmployeesRequest) string {
 	filterParts = append(filterParts, fmt.Sprintf("departmentId=%s", input.DepartmentID))
 
 	filters := strings.Join(filterParts, "&")
-	return fmt.Sprintf(cache.CacheEmployeesWithParams, filters)
+	return fmt.Sprintf(cache.CacheEmployeesWithParams, namespaceVersion, filters)
 }
 
 func (s *service) calculateCostMultiplier(input dto.GetEmployeesRequest) int {
@@ -250,4 +259,8 @@ func (s *service) calculateCostMultiplier(input dto.GetEmployeesRequest) int {
 	} else {
 		return 1
 	}
+}
+
+func invalidateCache() {
+	cache.EmployeeNamespaceVersion.Add(1)
 }

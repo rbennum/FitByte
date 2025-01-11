@@ -60,6 +60,9 @@ func (s *service) Create(
 		)
 		return dto.ResponseSingleDepartment{}, err
 	}
+
+	invalidateCache()
+
 	result := dto.ResponseSingleDepartment{
 		DepartmentID:   row.Id,
 		DepartmentName: row.Name,
@@ -148,6 +151,9 @@ func (s *service) Update(
 		)
 		return dto.ResponseSingleDepartment{}, err
 	}
+
+	invalidateCache()
+
 	result := dto.ResponseSingleDepartment{
 		DepartmentID:   row.Id,
 		DepartmentName: row.Name,
@@ -173,10 +179,15 @@ func (s *service) Delete(id string, managerID string) error {
 			err,
 		)
 	}
+
+	invalidateCache()
+
 	return err
 }
 
 func (s *service) generateCacheKey(managerId string, input dto.RequestDepartment) string {
+	namespaceVersion := cache.DepartmentNamespaceVersion.Load()
+
 	// Serialize params into a string (e.g., "name=Jono&gender=male")
 	var filterParts []string
 
@@ -186,7 +197,7 @@ func (s *service) generateCacheKey(managerId string, input dto.RequestDepartment
 	filterParts = append(filterParts, fmt.Sprintf("name=%s", input.DepartmentName))
 
 	filters := strings.Join(filterParts, "&")
-	return fmt.Sprintf(cache.CacheDepartmentsWithParams, filters)
+	return fmt.Sprintf(cache.CacheDepartmentsWithParams, namespaceVersion, filters)
 }
 
 func (s *service) calculateCostMultiplier(input dto.RequestDepartment) int {
@@ -209,4 +220,8 @@ func (s *service) calculateCostMultiplier(input dto.RequestDepartment) int {
 	} else {
 		return 1
 	}
+}
+
+func invalidateCache() {
+	cache.DepartmentNamespaceVersion.Add(1)
 }

@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"log"
+	"sync/atomic"
 	"time"
 
 	"github.com/dgraph-io/ristretto/v2"
@@ -15,8 +16,13 @@ const (
 	CacheAuthEmailToToken      = "auth:%s"
 	CacheUserIdToProfile       = "user:%s"
 	CacheInvalidatedUserIds    = "inv_usr" // Value is comma-separated, e.g., 1,3,5
-	CacheEmployeesWithParams   = "employees:%s"
-	CacheDepartmentsWithParams = "departments:%s"
+	CacheEmployeesWithParams   = "employees:v%d:%s"
+	CacheDepartmentsWithParams = "departments:v%d:%s"
+)
+
+var (
+	EmployeeNamespaceVersion   atomic.Int64
+	DepartmentNamespaceVersion atomic.Int64
 )
 
 var Cache *ristretto.Cache[string, string]
@@ -32,6 +38,9 @@ func Initialize() {
 	if err != nil {
 		log.Fatalf("failed to initialize cache: %v", err)
 	}
+
+	EmployeeNamespaceVersion.Store(1)
+	DepartmentNamespaceVersion.Store(1)
 }
 
 func Set(key string, value string) {
