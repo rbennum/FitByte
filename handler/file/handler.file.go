@@ -1,14 +1,18 @@
 package fileHandler
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/levensspel/go-gin-template/domain"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	fileService "github.com/levensspel/go-gin-template/service/file"
+	"github.com/samber/do/v2"
 )
 
 type FileHandler interface {
@@ -16,12 +20,20 @@ type FileHandler interface {
 }
 
 type handler struct {
-	service fileService.FileService
-	logger  logger.Logger
+	service       fileService.FileService
+	logger        logger.Logger
+	storageClient domain.StorageClient
 }
 
-func NewHandler(service fileService.FileService, logger logger.Logger) FileHandler {
-	return &handler{service: service, logger: logger}
+func NewHandler(service fileService.FileService, logger logger.Logger, storageClient domain.StorageClient) FileHandler {
+	return &handler{service: service, logger: logger, storageClient: storageClient}
+}
+
+func NewInject(i do.Injector) (FileHandler, error) {
+	_service := do.MustInvoke[fileService.FileService](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	_storageClient := do.MustInvoke[domain.StorageClient](i)
+	return NewHandler(_service, &_logger, _storageClient), nil
 }
 
 // Upload godoc
@@ -81,12 +93,27 @@ func (h handler) Upload(ctx *gin.Context) {
 		return
 	}
 
+	// Read file content into a buffer
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, file)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Simpan file atau proses lebih lanjut
 	// Misalnya, simpan file ke server atau S3
-	h.service.Upload(file, header)
+	h.service.Upload(ctx, file, header)
 
+	uploadedURL, err := h.storageClient.PutFile(ctx, header.Filename, header.Header.Get("Content-Type"), buf.Bytes(), true)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	// return file URI kembali dari service
-	ctx.JSON(http.StatusOK, helper.NewResponse(dto.FileUploadRespondPayload{
-		Uri: "cuy",
-	}, nil))
+	ctx.JSON(
+		http.StatusOK,
+		dto.FileUploadRespondPayload{
+			Uri: uploadedURL},
+	)
 }
