@@ -3,7 +3,6 @@ package userRepository
 import (
 	"context"
 	"fmt"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
 	"github.com/samber/do/v2"
@@ -150,6 +149,34 @@ func (r *UserRepository) GetProfile(ctx context.Context, id string) (*entity.Get
 
 	return &user, nil
 
+}
+
+func (r *UserRepository) GetBatchOfProfiles(
+	ctx context.Context,
+	ids []string,
+) ([]entity.GetProfile, error) {
+	query := `
+		SELECT managerid, email, name, userImageUri, companyname, companyimageuri
+		FROM manager
+		WHERE managerid = ANY($1::text[]);
+	`
+	rows, err := r.db.Query(ctx, query, ids)
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err) // Return wrapped errors
+	}
+	defer rows.Close()
+
+	var users []entity.GetProfile
+	for rows.Next() {
+		var user entity.GetProfile
+		err := rows.Scan(&user.ManagerId, &user.Email, &user.Name, &user.UserImageUri, &user.CompanyName, &user.CompanyImageUri)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (r *UserRepository) UpdateProfile(ctx context.Context, id string, data *entity.GetProfile) error {

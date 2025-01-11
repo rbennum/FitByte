@@ -19,11 +19,11 @@ import (
 func main() {
 	healthCheckDI()
 
-	autoMigrate := config.EnableAutoMigrate()
-
-	if autoMigrate {
+	if config.EnableAutoMigrate() {
 		migration.AutoMigrate()
 	}
+
+	cache.Initialize()
 
 	// Handle graceful shutdown
 	sig := make(chan os.Signal, 1)
