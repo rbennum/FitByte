@@ -3,10 +3,10 @@ package departmentService
 import (
 	"context"
 	"fmt"
-	"github.com/levensspel/go-gin-template/cache"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/levensspel/go-gin-template/cache"
 
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
@@ -133,16 +133,7 @@ func (s *service) Update(
 	id string,
 	managerID string,
 ) (dto.ResponseSingleDepartment, error) {
-	deptID, err := strconv.Atoi(id)
-	if err != nil {
-		s.logger.Error(
-			fmt.Sprintf("Invalid int conversion: %v", err),
-			helper.DepartmentServicePatch,
-			err,
-		)
-		return dto.ResponseSingleDepartment{}, err
-	}
-	row, err := s.repo.Update(context.Background(), name, deptID, managerID)
+	row, err := s.repo.Update(context.Background(), name, id, managerID)
 	if err != nil {
 		s.logger.Error(
 			fmt.Sprintf("Error fetching rows: %v", err),
@@ -162,16 +153,7 @@ func (s *service) Update(
 }
 
 func (s *service) Delete(id string, managerID string) error {
-	deptID, err := strconv.Atoi(id)
-	if err != nil {
-		s.logger.Error(
-			fmt.Sprintf("Invalid int conversion: %v", err),
-			helper.DepartmentServiceDelete,
-			err,
-		)
-		return err
-	}
-	err = s.repo.Delete(context.Background(), deptID, managerID)
+	err := s.repo.Delete(context.Background(), id, managerID)
 	if err != nil {
 		s.logger.Error(
 			err.Error(),
