@@ -1,7 +1,7 @@
 package migration
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx"
@@ -16,15 +16,17 @@ func AutoMigrate() {
 	migrate, err := migrate.New(MIGRATION_FILE_PATH, cfg)
 
 	if err != nil {
-		log.Fatalf("Error creating migrate instance: %v", err)
+		message := fmt.Sprintf("Error creating migrate instance: %v", err)
+		panic(message)
 	}
 
 	if err := migrate.Up(); err != nil {
 		if err.Error() == "no change" {
-			log.Println("No new migrations to apply.")
+			fmt.Println("No new migrations to apply.")
 		} else {
-			log.Fatalf("Migration failed: %v", err)
+			message := fmt.Sprintf("Migration failed: %v", err)
+			panic(message)
 		}
 	}
-	log.Println("Migration completed successfully!")
+	fmt.Println("Migration completed successfully!")
 }
