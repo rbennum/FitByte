@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/levensspel/go-gin-template/cache"
 
 	"github.com/levensspel/go-gin-template/auth"
@@ -29,12 +30,12 @@ const (
 )
 
 type IUserService interface {
-	RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error)
-	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
-	Update(input dto.RequestRegister) (dto.Response, error)
-	DeleteByID(id string) error
-	GetProfile(managerid string) (*dto.ResponseGetProfile, error)
-	UpdateProfile(managerid string, input dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error)
+	RegisterUser(ctx *gin.Context, input dto.UserRequestPayload) (dto.ResponseRegister, error)
+	Login(ctx *gin.Context, input dto.UserRequestPayload) (dto.ResponseLogin, error)
+	Update(ctx *gin.Context, input dto.RequestRegister) (dto.Response, error)
+	DeleteByID(ctx *gin.Context, id string) error
+	GetProfile(ctx *gin.Context, managerid string) (*dto.ResponseGetProfile, error)
+	UpdateProfile(ctx *gin.Context, managerid string, input dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error)
 }
 
 type UserService struct {
@@ -58,7 +59,7 @@ func NewUserServiceInject(i do.Injector) (UserService, error) {
 	return NewUserService(_userRepo, _logger), nil
 }
 
-func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRegister, error) {
+func (s *UserService) RegisterUser(ctx *gin.Context, input dto.UserRequestPayload) (dto.ResponseRegister, error) {
 	err := validation.ValidateUserCreate(input, s.userRepo)
 	if err != nil {
 		return dto.ResponseRegister{}, helper.NewErrorResponse(http.StatusBadRequest, err.Error())
@@ -66,7 +67,8 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 
 	_, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
 	if found {
-		return dto.ResponseRegister{}, fmt.Errorf("email %s is already in use", input.Email)
+		// return dto.ResponseRegister{}, fmt.Errorf("email %s is already in use", input.Email)
+		return dto.ResponseRegister{}, helper.ErrConflict
 	}
 
 	user := entity.User{}
@@ -115,7 +117,7 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 	return response, nil
 }
 
-func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, error) {
+func (s *UserService) Login(ctx *gin.Context, input dto.UserRequestPayload) (dto.ResponseLogin, error) {
 	err := validation.ValidateUserLogin(input)
 	if err != nil {
 		return dto.ResponseLogin{}, helper.NewErrorResponse(http.StatusBadRequest, err.Error())
@@ -166,7 +168,7 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 	return response, nil
 }
 
-func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
+func (s *UserService) Update(ctx *gin.Context, input dto.RequestRegister) (dto.Response, error) {
 	prehashed := prehashPassword(input.Password)
 	passwordHash, err := bcrypt.GenerateFromPassword(prehashed, bcrypt.MinCost)
 
@@ -199,7 +201,7 @@ func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
 	return response, nil
 }
 
-func (s *UserService) DeleteByID(id string) error {
+func (s *UserService) DeleteByID(ctx *gin.Context, id string) error {
 	// Invalidate cache
 	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
 	if found {
@@ -216,7 +218,7 @@ func (s *UserService) DeleteByID(id string) error {
 }
 
 // Get manager profile by their id
-func (s *UserService) GetProfile(id string) (*dto.ResponseGetProfile, error) {
+func (s *UserService) GetProfile(ctx *gin.Context, id string) (*dto.ResponseGetProfile, error) {
 
 	// Get from cache
 	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
@@ -294,7 +296,7 @@ func (s *UserService) GetProfile(id string) (*dto.ResponseGetProfile, error) {
 }
 
 // Update manager profile by their id
-func (s *UserService) UpdateProfile(id string, req dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error) {
+func (s *UserService) UpdateProfile(ctx *gin.Context, id string, req dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error) {
 	var profile *entity.GetProfile
 	var err error
 

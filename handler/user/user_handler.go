@@ -56,7 +56,7 @@ func (h handler) Update(ctx *gin.Context) {
 	}
 	id := ctx.MustGet("user_id")
 	input.Id = id.(string)
-	response, err := h.service.Update(*input)
+	response, err := h.service.Update(ctx, *input)
 
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
@@ -80,7 +80,7 @@ func (h handler) Update(ctx *gin.Context) {
 func (h handler) Delete(ctx *gin.Context) {
 	id := ctx.MustGet("user_id")
 
-	err := h.service.DeleteByID(id.(string))
+	err := h.service.DeleteByID(ctx, id.(string))
 
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
@@ -109,7 +109,7 @@ func (h handler) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.service.GetProfile(id)
+	response, err := h.service.GetProfile(ctx, id)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
@@ -149,7 +149,7 @@ func (h handler) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.service.UpdateProfile(id, *req)
+	response, err := h.service.UpdateProfile(ctx, id, *req)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return

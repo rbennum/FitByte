@@ -67,7 +67,7 @@ func (h handler) Post(ctx *gin.Context) {
 		}
 		if len(modelState) == 0 {
 			h.logger.Info("Register", helper.FunctionCaller("AuthHander.Post"), input)
-			response, err := h.service.RegisterUser(*input)
+			response, err := h.service.RegisterUser(ctx, *input)
 			h.logger.Info("After Register", helper.FunctionCaller("AuthHander.Post"), input)
 			if err != nil {
 				ctx.JSON(
@@ -91,7 +91,7 @@ func (h handler) Post(ctx *gin.Context) {
 	case dto.Login:
 		// do login
 		fmt.Printf("input %s", *input)
-		response, err := h.service.Login(*input)
+		response, err := h.service.Login(ctx, *input)
 
 		if err != nil {
 			ctx.JSON(

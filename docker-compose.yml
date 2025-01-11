@@ -1,7 +1,7 @@
 services:
   go-appl:
     container_name: go-be-skeleton
-    image: p3t/go:runtime
+    image: prasasdidzul/projeksprintb3-p1:runtime
     build:
       context: .
       args:
@@ -26,7 +26,7 @@ services:
 
   go-appl-dev:
     container_name: go-be-skeleton
-    image: p3t/go:runtime
+    image: prasasdidzul/projeksprintb3-p1:runtime
     build:
       context: .
       args:
