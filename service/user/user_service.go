@@ -2,6 +2,7 @@ package userService
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -32,7 +33,7 @@ type IUserService interface {
 	Login(input dto.UserRequestPayload) (dto.ResponseLogin, error)
 	Update(input dto.RequestRegister) (dto.Response, error)
 	DeleteByID(id string) error
-	GetProfile(managerid string) (*dto.ResposneGetProfile, error)
+	GetProfile(managerid string) (*dto.ResponseGetProfile, error)
 	UpdateProfile(managerid string, input dto.RequestUpdateProfile) (*dto.RequestUpdateProfile, error)
 }
 
@@ -74,7 +75,8 @@ func (s *UserService) RegisterUser(input dto.UserRequestPayload) (dto.ResponseRe
 	user.CreatedAt = time.Now().Unix()
 	user.UpdatedAt = time.Now().Unix()
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
+	prehashed := prehashPassword(input.Password)
+	passwordHash, err := bcrypt.GenerateFromPassword(prehashed, bcrypt.MinCost)
 
 	if err != nil {
 		s.logger.Error(err.Error(), helper.GenerateFromPassword, passwordHash)
@@ -119,15 +121,6 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 		return dto.ResponseLogin{}, helper.NewErrorResponse(http.StatusBadRequest, err.Error())
 	}
 
-	// Get from cache
-	cachedToken, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
-	if found {
-		return dto.ResponseLogin{
-			Email: input.Email,
-			Token: cachedToken,
-		}, nil
-	}
-
 	//get user
 	fmt.Printf("email %s", input.Email)
 	user, err := s.userRepo.GetUserbyEmail(context.Background(), input.Email)
@@ -140,10 +133,20 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 	}
 
 	// password compared
-	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), []byte(input.Password))
+	prehashed := prehashPassword(input.Password)
+	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), prehashed)
 	if err != nil {
 		s.logger.Error(err.Error(), helper.FunctionCaller("UserService.Login.CompareHashAndPassword"), err)
 		return dto.ResponseLogin{}, helper.ErrorInvalidLogin
+	}
+
+	// Get from cache
+	cachedToken, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
+	if found {
+		return dto.ResponseLogin{
+			Email: input.Email,
+			Token: cachedToken,
+		}, nil
 	}
 
 	jwtService := auth.NewJWTService()
@@ -164,17 +167,18 @@ func (s *UserService) Login(input dto.UserRequestPayload) (dto.ResponseLogin, er
 }
 
 func (s *UserService) Update(input dto.RequestRegister) (dto.Response, error) {
-	user := entity.User{}
-	user.Id = input.Id
-	user.Username.String = input.Username
-	user.Email.String = input.Email
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
+	prehashed := prehashPassword(input.Password)
+	passwordHash, err := bcrypt.GenerateFromPassword(prehashed, bcrypt.MinCost)
 
 	if err != nil {
 		s.logger.Error(err.Error(), helper.UserServiceUpdate, err)
 		return dto.Response{}, err
 	}
 
+	user := entity.User{}
+	user.Id = input.Id
+	user.Username.String = input.Username
+	user.Email.String = input.Email
 	user.Password = string(passwordHash)
 	user.UpdatedAt = time.Now().Unix()
 	err = s.userRepo.Update(context.Background(), user)
@@ -212,12 +216,12 @@ func (s *UserService) DeleteByID(id string) error {
 }
 
 // Get manager profile by their id
-func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
+func (s *UserService) GetProfile(id string) (*dto.ResponseGetProfile, error) {
 
 	// Get from cache
 	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
 	if found {
-		return &dto.ResposneGetProfile{
+		return &dto.ResponseGetProfile{
 			Email:           cachedProfile["email"],
 			Name:            cachedProfile["name"],
 			UserImageUri:    cachedProfile["userImageUri"],
@@ -279,7 +283,7 @@ func (s *UserService) GetProfile(id string) (*dto.ResposneGetProfile, error) {
 		cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id), profileToCache)
 	}
 
-	result := dto.ResposneGetProfile{
+	result := dto.ResponseGetProfile{
 		Email:           profile.Email,
 		Name:            profile.Name.String,
 		UserImageUri:    profile.UserImageUri.String,
@@ -385,4 +389,9 @@ func appendToInvalidatedUserIds(id string) {
 
 	invalidatedUserIds = append(invalidatedUserIds, id)
 	cache.Set(cache.CacheInvalidatedUserIds, strings.Join(invalidatedUserIds, ","))
+}
+
+func prehashPassword(password string) []byte {
+	hash := sha256.Sum256([]byte(password))
+	return hash[:]
 }

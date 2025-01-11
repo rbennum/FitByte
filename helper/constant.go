@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"net/http"
 )
 
 type FunctionCaller string
@@ -47,6 +48,6 @@ var ErrorInternalServerError = errors.New("internal server error")
 
 var ErrorEmailRegistered = errors.New("email is already registered")
 var ErrorUsernameRegistered = errors.New("username is already registered")
-var ErrorInvalidLogin = errors.New("invalid email or password")
+var ErrorInvalidLogin = NewErrorResponse(http.StatusBadRequest, "invalid email or password")
 
 var WORK_DIR string
