@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/levensspel/go-gin-template/cache"
-	"github.com/levensspel/go-gin-template/di"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/levensspel/go-gin-template/cache"
+	"github.com/levensspel/go-gin-template/config"
+	"github.com/levensspel/go-gin-template/di"
+	"github.com/levensspel/go-gin-template/migration"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/levensspel/go-gin-template/server"
@@ -16,8 +19,11 @@ import (
 func main() {
 	healthCheckDI()
 
-	cache.Initialize()
+	if config.EnableAutoMigrate() {
+		migration.AutoMigrate()
+	}
 
+	cache.Initialize()
 	// Handle graceful shutdown
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)

@@ -88,3 +88,52 @@ Caranya adalah
 ```go
 authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
 ```
+
+# Use Migrations
+ cara melakukan migrasi database menggunakan `golang-migrate` dengan opsi manual atau otomatis melalui konfigurasi di file `.env`.
+
+
+## Prasyarat
+1. Pastikan Anda telah menginstall CLI `golang-migrate`.
+2. File `.env` memiliki konfigurasi berikut:
+
+```shell
+ENABLE_AUTO_MIGRATION=FALSE
+```
+
+## Manual
+
+Jika `ENABLE_AUTO_MIGRATION` diset ke `FALSE`, migrasi perlu dijalankan secara manual menggunakan CLI.
+
+### Mode Manual Migration
+
+1. Migration Up
+        
+    Gunakan perintah berikut untuk menjalankan semua migrasi ke versi terbaru:
+
+    ```shell
+    migrate -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" -path database/migrations up
+    ```
+
+    Gantilah `username`, `password`, `localhost`, `5432`, dan `dbname `dengan informasi koneksi database Anda.
+
+2. Migration Down
+        
+    Gunakan perintah berikut untuk menurunkan versi migrasi satu langkah ke bawah:
+
+    ```shell
+    migrate -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" -path database/migrations down
+    ```
+
+    Gantilah `username`, `password`, `localhost`, `5432`, dan `dbname `dengan informasi koneksi database Anda.
+
+3. Membuat File Migration Baru
+        
+    Untuk membuat file migrasi baru, gunakan perintah berikut:
+
+    ```shell
+    migrate create -ext sql -dir database/migrations <NameMigrationFile>   
+    ```
+
+## Mode Auto Migration
+Jika `ENABLE_AUTO_MIGRATION` diset ke `TRUE`, migrasi akan dijalankan secara otomatis ketika aplikasi dijalankan.
