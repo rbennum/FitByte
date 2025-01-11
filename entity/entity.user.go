@@ -23,6 +23,7 @@ type UserTransactDB struct {
 }
 
 type GetProfile struct {
+	ManagerId       string         `json:"managerId"`
 	Email           string         `json:"email"`
 	Name            sql.NullString `json:"name"`
 	UserImageUri    sql.NullString `json:"userImageUri"`

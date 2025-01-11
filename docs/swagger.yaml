@@ -157,6 +157,33 @@ paths:
                 errors:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
       summary: Entry for authentication or create new user
       tags:
       - auth
@@ -427,6 +454,87 @@ paths:
       summary: Get employee
       tags:
       - employee
+    patch:
+      consumes:
+      - application/json
+      description: Update a employee
+      parameters:
+      - description: Bearer JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: identityNumber
+        in: path
+        name: identityNumber
+        required: true
+        type: string
+      - description: data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EmployeePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Update a employee
+      tags:
+      - employee
     post:
       consumes:
       - application/json
@@ -492,6 +600,62 @@ paths:
                   $ref: '#/definitions/helper.ErrorResponse'
               type: object
       summary: Create a new employee
+      tags:
+      - employee
+  /v1/employee/{idNumber}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a employee
+      parameters:
+      - description: Bearer + token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: identityNumber
+        in: path
+        name: identityNumber
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "404":
+          description: Not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Delete a employee
       tags:
       - employee
   /v1/file:

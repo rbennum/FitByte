@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -11,17 +10,18 @@ import (
 
 const (
 	MaxCacheSize = 256 << 20 //  256 MB
-	DefaultTtl   = 30 * time.Minute
+	DefaultTtl   = 5 * time.Minute
 
 	CacheAuthEmailToToken      = "auth:%s"
 	CacheUserIdToProfile       = "user:%s"
+	CacheInvalidatedUserIds    = "inv_usr" // Value is comma-separated, e.g., 1,3,5
 	CacheEmployeesWithParams   = "employees:%s"
 	CacheDepartmentsWithParams = "departments:%s"
 )
 
 var Cache *ristretto.Cache[string, string]
 
-func initialize() {
+func Initialize() {
 	var err error
 
 	Cache, err = ristretto.NewCache(&ristretto.Config[string, string]{
@@ -81,14 +81,12 @@ func Get(key string) (string, bool) {
 }
 
 func GetAsMap(key string) (map[string]string, bool) {
-	// 1. cari cache by key
 	val, found := Cache.Get(key)
-	// 2. if found
+
 	if !found {
 		return nil, false
 	}
-	fmt.Printf("=> Value found in cache : %s\n", val)
-	// deserialize json string to format
+
 	var result map[string]string
 	err := json.Unmarshal([]byte(val), &result)
 	if err != nil {

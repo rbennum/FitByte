@@ -42,6 +42,9 @@ func NewHandlerInject(i do.Injector) (AuthorizationHandler, error) {
 // @Success 200 {object} helper.Response{data=helper.Response} "EXISTING"
 // @Success 201 {object} helper.Response{data=helper.Response} "CREATED"
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
+// @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Not Found"
+// @Failure 409 {object} helper.Response{errors=helper.ErrorResponse} "Conflict"
+// @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/auth [POST]
 func (h handler) Post(ctx *gin.Context) {
 	input := new(dto.UserRequestPayload)
@@ -80,7 +83,7 @@ func (h handler) Post(ctx *gin.Context) {
 				return
 			}
 			h.logger.Info("Created", helper.FunctionCaller("AuthHander.Post"), response)
-			ctx.JSON(http.StatusCreated, helper.NewResponse(response, err))
+			ctx.JSON(http.StatusCreated, response)
 		} else {
 			h.logger.Error("BadRequest", helper.FunctionCaller("AuthHander.Post"), modelState)
 			ctx.JSON(http.StatusBadRequest, helper.NewResponse(modelState, nil))
@@ -96,14 +99,14 @@ func (h handler) Post(ctx *gin.Context) {
 				helper.NewResponse(
 					helper.ErrorResponse{
 						Code:    helper.GetErrorStatusCode(err),
-						Message: err.Error(),
+						Message: helper.GetErrorMessage(err),
 					},
 					err,
 				),
 			)
 			return
 		}
-		ctx.JSON(http.StatusOK, helper.Response{Data: response, Error: err})
+		ctx.JSON(http.StatusOK, response)
 	default:
 		ctx.JSON(
 			http.StatusBadRequest,
