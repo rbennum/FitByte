@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
@@ -36,14 +35,14 @@ func (r *DepartmentRepository) Create(
 		RETURNING departmentid, departmentname
 	`
 	row := r.db.QueryRow(ctx, query, name, managerID)
-	var departmentID int
+	var departmentID string
 	var departmentName string
 	err := row.Scan(&departmentID, &departmentName)
 	if err != nil {
 		return nil, err
 	}
 	result := entity.Department{
-		Id:   fmt.Sprintf("%d", departmentID),
+		Id:   departmentID,
 		Name: departmentName,
 	}
 	return &result, nil
@@ -72,13 +71,13 @@ func (r *DepartmentRepository) GetAll(
 	defer rows.Close()
 	var departments []entity.Department
 	for rows.Next() {
-		var departmentID int
+		var departmentID string
 		var departmentName string
 		if err := rows.Scan(&departmentID, &departmentName); err != nil {
 			return departments, err
 		}
 		var dept entity.Department
-		dept.Id = fmt.Sprintf("%d", departmentID)
+		dept.Id = departmentID
 		dept.Name = departmentName
 		departments = append(departments, dept)
 	}
@@ -88,7 +87,7 @@ func (r *DepartmentRepository) GetAll(
 func (r *DepartmentRepository) Update(
 	ctx context.Context,
 	name string,
-	deptID int,
+	deptID string,
 	managerID string,
 ) (*entity.Department, error) {
 	query := `
@@ -118,7 +117,7 @@ func (r *DepartmentRepository) Update(
 
 func (r *DepartmentRepository) Delete(
 	ctx context.Context,
-	deptID int,
+	deptID string,
 	managerID string,
 ) error {
 	// check if the department exists

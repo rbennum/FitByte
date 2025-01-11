@@ -76,7 +76,7 @@ func (h *handler) Create(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, helper.NewResponse(nil, err))
 		return
 	}
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusCreated, response)
 }
 
 // List all available departments
