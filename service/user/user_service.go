@@ -66,7 +66,8 @@ func (s *UserService) RegisterUser(ctx *gin.Context, input dto.UserRequestPayloa
 
 	_, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, input.Email))
 	if found {
-		return dto.ResponseRegister{}, fmt.Errorf("email %s is already in use", input.Email)
+		// return dto.ResponseRegister{}, fmt.Errorf("email %s is already in use", input.Email)
+		return dto.ResponseRegister{}, helper.ErrConflict
 	}
 
 	user := entity.User{}
