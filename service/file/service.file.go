@@ -1,38 +1,51 @@
 package fileService
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
 
+	"github.com/levensspel/go-gin-template/domain"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
 	repositories "github.com/levensspel/go-gin-template/repository/file"
+	"github.com/samber/do/v2"
 )
 
 type FileService interface {
-	Upload(file multipart.File, header *multipart.FileHeader) (dto.FileUploadRespondPayload, error)
+	Upload(ctx context.Context, file multipart.File, header *multipart.FileHeader) (dto.FileUploadRespondPayload, error)
 	DeleteByID(fileid string) error
 }
 
 type fileService struct {
-	repo   repositories.FileRepository
-	logger logger.Logger
+	repo          repositories.FileRepository
+	logger        logger.Logger
+	storageClient domain.StorageClient
 }
 
 func NewFileService(
 	repo repositories.FileRepository,
 	logger logger.Logger,
+	storageClient domain.StorageClient,
 ) FileService {
 	return &fileService{
-		repo:   repo,
-		logger: logger,
+		repo:          repo,
+		logger:        logger,
+		storageClient: storageClient,
 	}
 }
 
-func (s *fileService) Upload(file multipart.File, header *multipart.FileHeader) (dto.FileUploadRespondPayload, error) {
+func NewInject(i do.Injector) (FileService, error) {
+	_db := do.MustInvoke[repositories.FileRepository](i)
+	_logger := do.MustInvoke[logger.LogHandler](i)
+	_storageClient := do.MustInvoke[domain.StorageClient](i)
+	return NewFileService(_db, &_logger, _storageClient), nil
+}
+
+func (s *fileService) Upload(ctx context.Context, file multipart.File, header *multipart.FileHeader) (dto.FileUploadRespondPayload, error) {
 	// Simpan file ke server lokal
 	file, err := header.Open()
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
+	"github.com/samber/do/v2"
 )
 
 type FileRepository struct {
@@ -13,6 +14,11 @@ type FileRepository struct {
 
 func NewFileRepository(db *pgxpool.Pool) FileRepository {
 	return FileRepository{db: db}
+}
+
+func NewInject(i do.Injector) (FileRepository, error) {
+	_db := do.MustInvoke[*pgxpool.Pool](i)
+	return NewFileRepository(_db), nil
 }
 
 func (r *FileRepository) Create(ctx context.Context, e entity.File) error {

@@ -9,10 +9,7 @@ import (
 	employeeHandler "github.com/levensspel/go-gin-template/handler/employee"
 	fileHandler "github.com/levensspel/go-gin-template/handler/file"
 	userHandler "github.com/levensspel/go-gin-template/handler/user"
-	"github.com/levensspel/go-gin-template/logger"
 	"github.com/levensspel/go-gin-template/middleware"
-	fileRepository "github.com/levensspel/go-gin-template/repository/file"
-	fileService "github.com/levensspel/go-gin-template/service/file"
 	"github.com/samber/do/v2"
 
 	_ "github.com/levensspel/go-gin-template/docs"
@@ -21,19 +18,9 @@ import (
 )
 
 func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
-	logger := logger.NewlogHandler()
-
-	// api := r.Group("/v1")
-	// {
-	// 	// untuk memanfaatkan api versioning, uncomment dan pakai ini
-	// }
-
-	fileRepo := fileRepository.NewFileRepository(db)
-	fileService := fileService.NewFileService(fileRepo, logger)
-
 	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
 	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
-	fileHandler := fileHandler.NewHandler(fileService, logger)
+	fileHandler := do.MustInvoke[fileHandler.FileHandler](di.Injector)
 	deptHandler := do.MustInvoke[departmentHandler.DepartmentHandler](di.Injector)
 	employeeHdlr := do.MustInvoke[employeeHandler.EmployeeHandler](di.Injector)
 

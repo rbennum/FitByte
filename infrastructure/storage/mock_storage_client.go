@@ -3,9 +3,12 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/levensspel/go-gin-template/domain"
 	"github.com/samber/do/v2"
-	"strings"
 )
 
 type MockStorageClient struct{}
@@ -17,10 +20,25 @@ func (m MockStorageClient) PutFile(
 	fileContent []byte,
 	isPublic bool,
 ) (string, error) {
+	// Simulasi kegagalan jika key mengandung "mock_failed"
 	if strings.Contains(key, "mock_failed") {
 		return "", errors.New("Failed to put file")
 	}
 
+	// Tentukan lokasi penyimpanan file
+	savePath := fmt.Sprintf("./.uploads/%s", key)
+
+	// Buat direktori jika belum ada
+	if err := os.MkdirAll("./.uploads", os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Simpan file ke direktori
+	if err := os.WriteFile(savePath, fileContent, os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to save file: %w", err)
+	}
+
+	// Kembalikan URL file yang disimpan
 	return m.GetUrl(key), nil
 }
 
@@ -33,7 +51,9 @@ func (m MockStorageClient) GetFileContent(ctx context.Context, key string) ([]by
 }
 
 func (m MockStorageClient) GetUrl(key string) string {
-	return "https://tmssl.akamaized.net/images/foto/galerie/cristiano-ronaldo-im-trikot-von-portugal-1718197560-139337.jpg"
+	// Buat URI untuk file
+	baseURL := "/uploads"
+	return fmt.Sprintf("%s/%s", baseURL, key)
 }
 
 func NewMockStorageClient() domain.StorageClient {
