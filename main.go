@@ -24,7 +24,6 @@ func main() {
 	}
 
 	cache.Initialize()
-
 	// Handle graceful shutdown
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
