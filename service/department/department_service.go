@@ -3,6 +3,7 @@ package departmentService
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -133,6 +134,9 @@ func (s *service) Update(
 	id string,
 	managerID string,
 ) (dto.ResponseSingleDepartment, error) {
+	if len(name) < 4 || len(name) > 33 {
+		return dto.ResponseSingleDepartment{}, helper.ErrBadRequest
+	}
 	row, err := s.repo.Update(context.Background(), name, id, managerID)
 	if err != nil {
 		s.logger.Error(
@@ -140,7 +144,22 @@ func (s *service) Update(
 			helper.DepartmentServicePatch,
 			err,
 		)
-		return dto.ResponseSingleDepartment{}, err
+		if err == helper.ErrNotFound {
+			return dto.ResponseSingleDepartment{}, helper.NewErrorResponse(
+				http.StatusNotFound,
+				err.Error(),
+			)
+		} else if err == helper.ErrConflict {
+			return dto.ResponseSingleDepartment{}, helper.NewErrorResponse(
+				http.StatusConflict,
+				err.Error(),
+			)
+		} else {
+			return dto.ResponseSingleDepartment{}, helper.NewErrorResponse(
+				http.StatusInternalServerError,
+				err.Error(),
+			)
+		}
 	}
 
 	invalidateCache()

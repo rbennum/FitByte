@@ -150,13 +150,13 @@ func (h *handler) Update(ctx *gin.Context) {
 	input := new(dto.RequestDepartment)
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerPatch, input)
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return
 	}
 	response, err := h.service.Update(input.DepartmentName, deptID, managerID)
 	if err != nil {
 		h.logger.Error(err.Error(), helper.DepartmentHandlerPatch)
-		ctx.JSON(http.StatusBadGateway, helper.NewResponse(nil, err))
+		ctx.JSON(helper.GetErrorStatusCode(err), err)
 		return
 	}
 	ctx.JSON(http.StatusOK, response)

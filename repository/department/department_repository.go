@@ -2,8 +2,6 @@ package departmentRepository
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -125,10 +123,10 @@ func (r *DepartmentRepository) Update(
 	var returnedID string
 	var returnedName string
 	err := r.db.QueryRow(ctx, query, name, deptID, managerID).Scan(&returnedID, &returnedName)
+	if returnedID == "" || returnedName == "" {
+		return nil, helper.ErrNotFound
+	}
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, sql.ErrNoRows
-		}
 		return nil, err
 	}
 	result := entity.Department{}
@@ -154,20 +152,18 @@ func (r *DepartmentRepository) Delete(
 			AND isdeleted = FALSE;
 	`
 	err := r.db.QueryRow(ctx, query, deptID, managerID).Scan(&deptName)
-	if err != nil {
-		return err
-	}
 	if deptName == "" {
 		return helper.ErrNotFound
+	}
+	if err != nil {
+		return err
 	}
 	// check if the department has employees assigned
 	var employeeCount int64
 	query = `
 		SELECT COUNT(*)
-		FROM employee
-		WHERE 
-			departmentid = $1
-			AND isdeleted = FALSE;
+		FROM employees
+		WHERE departmentid = $1;
 	`
 	err = r.db.QueryRow(ctx, query, deptID).Scan(&employeeCount)
 	if err != nil {
