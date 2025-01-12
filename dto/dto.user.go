@@ -7,7 +7,7 @@ const (
 
 type UserRequestPayload struct {
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
+	Password string `json:"password" validate:"required,min=8,max=32"`
 	Action   string `json:"action" validate:"required"`
 }
 
@@ -15,12 +15,12 @@ type RequestRegister struct {
 	Id       string `json:"id,omitempty"`
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
+	Password string `json:"password" validate:"required,min=8,max=32"`
 }
 
 type RequestLogin struct {
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
+	Password string `json:"password" validate:"required,min=8,max=32"`
 }
 
 type UserRequestUpdate struct {
