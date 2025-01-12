@@ -63,19 +63,22 @@ func (h *handler) Create(ctx *gin.Context) {
 	input := new(dto.RequestDepartment)
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate, input)
-		// ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
-		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err)) //just throw badrequest
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err)) // throw bad request immediately
 		return
 	}
 	response, err := h.service.Create(managerID, *input)
-	if errors.Is(err, helper.ErrBadRequest) {
+	if err != nil {
 		h.logger.Error(err.Error(), helper.DepartmentHandlerCreate)
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
-		return
-	} else if err != nil {
-		h.logger.Error(err.Error(), helper.DepartmentHandlerCreate, err)
-		ctx.JSON(http.StatusInternalServerError, helper.NewResponse(nil, err))
-		return
+		if errors.Is(err, helper.ErrBadRequest) {
+			ctx.JSON(http.StatusBadRequest, helper.NewErrorResponse(http.StatusBadRequest, err.Error()))
+			return
+		} else if errors.Is(err, helper.ErrConflict) {
+			ctx.JSON(http.StatusConflict, helper.NewErrorResponse(http.StatusConflict, err.Error()))
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, helper.NewErrorResponse(http.StatusInternalServerError, err.Error()))
+			return
+		}
 	}
 	ctx.JSON(http.StatusCreated, response)
 }

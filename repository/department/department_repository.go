@@ -29,7 +29,28 @@ func (r *DepartmentRepository) Create(
 	name string,
 	managerID string,
 ) (*entity.Department, error) {
+	// check if the department exists
 	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM department 
+			WHERE
+				departmentname = $1
+				AND managerid = $2
+				AND isdeleted = FALSE
+		);
+	`
+	var exists bool
+	err := r.db.QueryRow(ctx, query, name, managerID).Scan(&exists)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		// the said department already exists
+		return nil, helper.ErrConflict
+	}
+	// insert the newly created name into DB
+	query = `
 		INSERT INTO department (departmentid, departmentname, managerid)
 		VALUES (DEFAULT, $1, $2)
 		RETURNING departmentid, departmentname
@@ -37,7 +58,7 @@ func (r *DepartmentRepository) Create(
 	row := r.db.QueryRow(ctx, query, name, managerID)
 	var departmentID string
 	var departmentName string
-	err := row.Scan(&departmentID, &departmentName)
+	err = row.Scan(&departmentID, &departmentName)
 	if err != nil {
 		return nil, err
 	}
