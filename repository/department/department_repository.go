@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/levensspel/go-gin-template/entity"
@@ -85,7 +86,7 @@ func (r *DepartmentRepository) GetAll(
 			AND isdeleted = FALSE
 		LIMIT $3 OFFSET $4;
 	`
-	rows, err := r.db.Query(ctx, query, managerID, name, limit, offset)
+	rows, err := r.db.Query(ctx, query, managerID, fmt.Sprintf("%s%s%s", "%", name, "%"), limit, offset)
 	if err != nil {
 		return nil, err
 	}
