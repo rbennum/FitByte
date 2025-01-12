@@ -2,11 +2,13 @@ package employeeHandler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/levensspel/go-gin-template/dto"
 	"github.com/levensspel/go-gin-template/helper"
 	"github.com/levensspel/go-gin-template/logger"
@@ -173,14 +175,14 @@ func (h *handler) Update(ctx *gin.Context) {
 		return
 	}
 
-	input := new(dto.UpdateEmployeeRequest)
-
-	if err := ctx.ShouldBindJSON(&input); err != nil {
+	var jsonMap map[string]string
+	if err := ctx.ShouldBindBodyWith(&jsonMap, binding.JSON); err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(helper.ErrBadRequest), helper.NewResponse(nil, err))
 		return
 	}
 
-	err = validation.ValidateEmployeeUpdate(input)
+	input := new(dto.UpdateEmployeeRequest)
+	err = validation.ValidateEmployeeUpdate(jsonMap, input)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(helper.ErrBadRequest), helper.NewResponse(nil, err))
 		return
@@ -225,6 +227,7 @@ func (h *handler) Delete(ctx *gin.Context) {
 	}
 
 	identityNumber := ctx.Param("identityNumber")
+	fmt.Println("identityNumber", identityNumber)
 	if len(identityNumber) < dto.IdentityNumberMinLength {
 		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, helper.ErrBadRequest))
 		return
