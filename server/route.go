@@ -58,9 +58,9 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 		employee := controllers.Group("/employee")
 		{
-			employee.POST("", middleware.Authorization, employeeHdlr.Create)
+			employee.POST("", middleware.Authorization, middleware.ContentType, employeeHdlr.Create)
 			employee.GET("", middleware.Authorization, employeeHdlr.GetAll)
-			employee.PATCH(":identityNumber", middleware.Authorization, employeeHdlr.Update)
+			employee.PATCH(":identityNumber", middleware.Authorization, middleware.ContentType, employeeHdlr.Update)
 			employee.DELETE(":identityNumber", middleware.Authorization, employeeHdlr.Delete)
 		}
 		// tambah route lainnya disini

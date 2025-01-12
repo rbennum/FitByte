@@ -10,6 +10,27 @@ import (
 )
 
 func ValidateEmployeeCreate(input *dto.EmployeePayload) error {
+	if input.IdentityNumber == "" {
+		return errors.New("Invalid identity number param")
+	}
+	if input.Name == "" {
+		return errors.New("Invalid name param")
+	}
+	if input.EmployeeImageUri == "" {
+		return errors.New("Invalid image URI param")
+	}
+	if input.DepartmentID == "" {
+		return errors.New("Invalid department id param")
+	}
+
+	extension := input.EmployeeImageUri[len(input.EmployeeImageUri)-5:]
+	if extension != ".jpeg" {
+		extension = extension[1:]
+		if extension != ".jpg" && extension != ".png" {
+			return errors.New("Invalid image URI param")
+		}
+	}
+
 	gender := strings.ToLower(input.Gender)
 	// fmt.Println("gender:", strings.ToLower(gender))
 	switch gender {

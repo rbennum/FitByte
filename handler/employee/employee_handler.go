@@ -89,7 +89,7 @@ func (h *handler) Create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, input)
+	ctx.JSON(http.StatusCreated, input)
 	return
 }
 
