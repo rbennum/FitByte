@@ -2,7 +2,6 @@ package employeeHandler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -227,7 +226,6 @@ func (h *handler) Delete(ctx *gin.Context) {
 	}
 
 	identityNumber := ctx.Param("identityNumber")
-	fmt.Println("identityNumber", identityNumber)
 	if len(identityNumber) < dto.IdentityNumberMinLength {
 		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, helper.ErrBadRequest))
 		return
