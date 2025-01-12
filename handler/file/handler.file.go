@@ -82,14 +82,14 @@ func (h handler) Upload(ctx *gin.Context) {
 
 	if !validExtensions[header.Header.Get("Content-Type")] {
 		h.logger.Warn("Invalid file type. Only jpeg, jpg, or png are allowed.", helper.FunctionCaller("FileHandler.Upload"), filepath.Ext(header.Filename))
-		ctx.JSON(http.StatusBadRequest, gin.H{"code": 415, "error": "Invalid file type. Only jpeg, jpg, or png are allowed."})
+		ctx.JSON(http.StatusBadRequest, gin.H{"code": 400, "error": "Invalid file type. Only jpeg, jpg, or png are allowed."})
 		return
 	}
 
 	// Validasi ukuran file (max 100 KiB)
 	if header.Size > 1024*100 { // 100 KiB
 		h.logger.Warn("File size exceeds 100KiB.", helper.FunctionCaller("FileHandler.Upload"), header.Size)
-		ctx.JSON(http.StatusBadRequest, gin.H{"code": 413, "error": "File size exceeds 100KiB."})
+		ctx.JSON(http.StatusBadRequest, gin.H{"code": 400, "error": "File size exceeds 100KiB."})
 		return
 	}
 

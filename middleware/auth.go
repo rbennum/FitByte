@@ -14,12 +14,23 @@ import (
 
 func Authorization(c *gin.Context) {
 	authorizationHeader := c.GetHeader("Authorization")
-	if !strings.Contains(authorizationHeader, "Bearer") {
+	fmt.Printf("Authorization Header Val: %s\b", authorizationHeader)
+	if !strings.Contains(authorizationHeader, "Bearer") && !strings.Contains(authorizationHeader, "bearer") {
 		c.JSON(http.StatusUnauthorized, helper.NewResponse(nil, errors.New("the request is allowed for logged in")))
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	bearerToken := strings.Replace(authorizationHeader, "Bearer ", "", -1)
+
+	bearerToken := ""
+	if strings.Contains(authorizationHeader, "Bearer") {
+		bearerToken = strings.Replace(authorizationHeader, "Bearer ", "", -1)
+	}
+	if strings.Contains(authorizationHeader, "bearer") {
+		bearerToken = strings.Replace(authorizationHeader, "bearer ", "", -1)
+	}
+
+	fmt.Printf("Token Val: %s\b", bearerToken)
+
 	id, err := auth.ParseToken(bearerToken)
 	fmt.Printf("ID Parsed Token: %s\n", id)
 	if err != nil {

@@ -63,7 +63,8 @@ func (h *handler) Create(ctx *gin.Context) {
 	input := new(dto.RequestDepartment)
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate, input)
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		// ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err)) //just throw badrequest
 		return
 	}
 	response, err := h.service.Create(managerID, *input)

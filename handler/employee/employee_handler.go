@@ -106,6 +106,7 @@ func (h *handler) Create(ctx *gin.Context) {
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
 // @Router /v1/employee [GET]
 func (h handler) GetAll(ctx *gin.Context) {
+	// todo lihat auth
 	defer helper.FallbackResponse(ctx)
 
 	input := new(dto.GetEmployeesRequest)
