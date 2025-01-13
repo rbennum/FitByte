@@ -99,6 +99,7 @@ func GetAsMap(key string) (map[string]string, bool) {
 	var result map[string]string
 	err := json.Unmarshal([]byte(val), &result)
 	if err != nil {
+		log.Printf("failed to unmarshal cache value: %v", val)
 		panic(err)
 	}
 
