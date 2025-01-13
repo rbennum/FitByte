@@ -14,8 +14,8 @@ func IsValidURI(fl validator.FieldLevel) bool {
 	}
 
 	if uriStr == "" {
-		// Allow empty URIs with `omitempty`.
-		return true
+		// Does not allow empty URIs
+		return false
 	}
 
 	// Parse the URI using net/url
