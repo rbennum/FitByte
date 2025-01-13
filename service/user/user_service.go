@@ -321,7 +321,7 @@ func (s *UserService) UpdateProfile(ctx *gin.Context, id string, req dto.Request
 
 	if req.Email != nil && *req.Email != profile.Email {
 		// Check cache
-		_, found := cache.GetAsMap(fmt.Sprintf(cache.CacheAuthEmailToToken, *req.Email))
+		_, found := cache.Get(fmt.Sprintf(cache.CacheAuthEmailToToken, *req.Email))
 		if found {
 			return nil, helper.ErrConflict
 

@@ -14,7 +14,7 @@ import (
 )
 
 type UserHandler interface {
-	Update(ctx *gin.Context)
+	Update(ctx *gin.Context) // Deprecated, replaced by UpdateProfile
 	Delete(ctx *gin.Context)
 	GetProfile(ctx *gin.Context)
 	UpdateProfile(ctx *gin.Context)
@@ -140,7 +140,7 @@ func (h handler) UpdateProfile(ctx *gin.Context) {
 	req := new(dto.RequestUpdateProfile)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn(err.Error(), helper.UserHandler, &req)
-		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
+		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return
 	}
 
