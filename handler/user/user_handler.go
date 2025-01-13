@@ -14,7 +14,7 @@ import (
 )
 
 type UserHandler interface {
-	Update(ctx *gin.Context)
+	Update(ctx *gin.Context) // Deprecated, replaced by UpdateProfile
 	Delete(ctx *gin.Context)
 	GetProfile(ctx *gin.Context)
 	UpdateProfile(ctx *gin.Context)

@@ -6,7 +6,12 @@ import (
 	repository "github.com/levensspel/go-gin-template/repository/user"
 )
 
-var validate = validator.New()
+var validate = func() *validator.Validate {
+	v := validator.New()
+	v.RegisterValidation("uri_with_path", IsValidURI)
+
+	return v
+}()
 
 func ValidateUserCreate(input dto.UserRequestPayload, r repository.UserRepository) error {
 	err := validate.Struct(input)
