@@ -7,5 +7,5 @@ type FileUploadRequestPayload struct {
 }
 
 type FileUploadRespondPayload struct {
-	Uri string `form:"uri"`
+	Uri string `json:"uri"`
 }

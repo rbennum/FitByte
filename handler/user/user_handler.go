@@ -111,6 +111,7 @@ func (h handler) GetProfile(ctx *gin.Context) {
 
 	response, err := h.service.GetProfile(ctx, id)
 	if err != nil {
+		h.logger.Warn(err.Error(), helper.FunctionCaller("UserHandler.GetProfile"), id)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
 	}
@@ -145,12 +146,14 @@ func (h handler) UpdateProfile(ctx *gin.Context) {
 
 	err = validation.ValidateUpdateProfile(*req)
 	if err != nil {
+		h.logger.Warn(err.Error(), helper.FunctionCaller("UserHandler.UpdateProfile"), &req)
 		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return
 	}
 
 	response, err := h.service.UpdateProfile(ctx, id, *req)
 	if err != nil {
+		h.logger.Warn(err.Error(), helper.FunctionCaller("UserHandler.UpdateProfile"), id, &req)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
 		return
 	}
