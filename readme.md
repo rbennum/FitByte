@@ -1,10 +1,13 @@
 # Go PS-3-T
+
 Cara run?
+
 1. `go run main.go`
 2. kalau mau tes--misalnya--. Buka `localhost:port/swagger/index.html`
 
-# Installation
-```
+## Installation
+
+```bash
 # clone the repository
 git clone [this_git_url]
 
@@ -15,9 +18,11 @@ cp .env.example .env
 go run main.go
 ```
 
-# Configuration
+## Configuration
+
 Create a `.env` file in the root directory with the following variables:
-```
+
+```bash
 DB_HOST=localhost
 DB_USER=user
 DB_PASSWORD=pw
@@ -29,7 +34,7 @@ PROD_HOST=#Your production host
 DEBUG_HOST=0.0.0.0
 ```
 
-# Running the App
+## Running the App
 
 In Go, there are two ways to run the app
 
@@ -47,7 +52,8 @@ go build -o .build/<name-of-build.extension>
 ```
 
 ## Go Run
-```
+
+```bash
 # just do this
 go run main.go
 
@@ -56,7 +62,7 @@ go run main.go
 
 ## On Docker
 
-```
+```bash
 docker-compose up -d
 # Dengan flag -d untuk menjalankan container di background (detached mode).
 ## Dengan menggunakan -d, terminal akan langsung kembali ke prompt tanpa menampilkan log container di terminal.
@@ -72,28 +78,34 @@ docker-compose up -d --build
 contoh: docker compose --profile local up -d --build
 ```
 
-# API Documentation
+## API Documentation
+
 One the applicatio is running, you can access the Swagger API documentation at:
-```
+
+```bash
 http://localhost:3000/swagger/index.html
 ```
 
-# Use of Dependency Injection
+## Use of Dependency Injection
+
 Caranya adalah
+
 1. Setup dari dependensi dasar sebuah service yang sekiranya tidak membutuhkan dependensi service lain, bisa cek pada `di/injector.go`
 2. Siapkan constructor dari sebuah service
 3. Siapkan injector dengan memanggilkan `MustInvoke` pada servis yang di-dependensi
 4. Kembali pada `di/injector.go` dan lakukan dengan `do.Provide` diurutan terbawah setelah service yang di-dependensikan
 5. Jika service tersebut dibutukan pada `router` lakukan dengan cara seperti ini, contoh 
+
 ```go
 authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
 ```
 
-# Use Migrations
- cara melakukan migrasi database menggunakan `golang-migrate` dengan opsi manual atau otomatis melalui konfigurasi di file `.env`.
+## Use Migrations
 
+cara melakukan migrasi database menggunakan `golang-migrate` dengan opsi manual atau otomatis melalui konfigurasi di file `.env`.
 
 ## Prasyarat
+
 1. Pastikan Anda telah menginstall CLI `golang-migrate`.
 2. File `.env` memiliki konfigurasi berikut:
 
@@ -108,27 +120,27 @@ Jika `ENABLE_AUTO_MIGRATION` diset ke `FALSE`, migrasi perlu dijalankan secara m
 ### Mode Manual Migration
 
 1. Migration Up
-        
+
     Gunakan perintah berikut untuk menjalankan semua migrasi ke versi terbaru:
 
     ```shell
     migrate -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" -path database/migrations up
     ```
 
-    Gantilah `username`, `password`, `localhost`, `5432`, dan `dbname `dengan informasi koneksi database Anda.
+    Gantilah `username`, `password`, `localhost`, `5432`, dan `dbname` dengan informasi koneksi database Anda.
 
 2. Migration Down
-        
+
     Gunakan perintah berikut untuk menurunkan versi migrasi satu langkah ke bawah:
 
     ```shell
     migrate -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" -path database/migrations down
     ```
 
-    Gantilah `username`, `password`, `localhost`, `5432`, dan `dbname `dengan informasi koneksi database Anda.
+    Gantilah `username`, `password`, `localhost`, `5432`, dan `dbname` dengan informasi koneksi database Anda.
 
 3. Membuat File Migration Baru
-        
+
     Untuk membuat file migrasi baru, gunakan perintah berikut:
 
     ```shell
@@ -136,4 +148,9 @@ Jika `ENABLE_AUTO_MIGRATION` diset ke `FALSE`, migrasi perlu dijalankan secara m
     ```
 
 ## Mode Auto Migration
+
 Jika `ENABLE_AUTO_MIGRATION` diset ke `TRUE`, migrasi akan dijalankan secara otomatis ketika aplikasi dijalankan.
+
+## Final Analysis
+
+If you want to read more about the load test result and its analysis, you can check [this document](analysis.md).
