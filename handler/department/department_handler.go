@@ -54,7 +54,7 @@ func NewInject(i do.Injector) (DepartmentHandler, error) {
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/department [POST]
 func (h *handler) Create(ctx *gin.Context) {
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
@@ -98,7 +98,7 @@ func (h *handler) Create(ctx *gin.Context) {
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/department [GET]
 func (h *handler) GetAll(ctx *gin.Context) {
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerCreate)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
@@ -140,7 +140,7 @@ func (h *handler) GetAll(ctx *gin.Context) {
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/department/{id} [PATCH]
 func (h *handler) Update(ctx *gin.Context) {
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		h.logger.Warn(err.Error(), helper.DepartmentHandlerPatch)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))
@@ -175,7 +175,7 @@ func (h *handler) Update(ctx *gin.Context) {
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/department/{id} [DELETE]
 func (h *handler) Delete(ctx *gin.Context) {
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		h.logger.Error(err.Error(), helper.DepartmentHandlerDelete)
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))

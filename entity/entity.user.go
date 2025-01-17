@@ -23,10 +23,16 @@ type UserTransactDB struct {
 }
 
 type GetProfile struct {
-	ManagerId       string         `json:"managerId"`
-	Email           string         `json:"email"`
-	Name            sql.NullString `json:"name"`
-	UserImageUri    sql.NullString `json:"userImageUri"`
-	CompanyName     sql.NullString `json:"companyName"`
-	CompanyImageUri sql.NullString `json:"companyImageUri"`
+	Id           *string `json:"id"`
+	Email        *string `json:"email"`
+	PasswordHash *string `json:"password_hash"`
+	Preference   *string `json:"preference"`
+	WeightUnit   *string `json:"weight_unit"`
+	HeightUnit   *string `json:"height_unit"`
+	Weight       *int    `json:"weight"`
+	Height       *int    `json:"height"`
+	Name         *string `json:"name"`
+	ImageUri     *string `json:"image_uri"`
+	UpdatedAt    int64   `json:"updated_at"`
+	CreatedAt    int64   `json:"created_at"`
 }

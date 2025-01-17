@@ -55,9 +55,12 @@ type ResponseLogin struct {
 }
 
 type ResponseGetProfile struct {
-	Email           string `json:"email"`
-	Name            string `json:"name"`
-	UserImageUri    string `json:"userImageUri"`
-	CompanyName     string `json:"companyName"`
-	CompanyImageUri string `json:"companyImageUri"`
+	Preference string `json:"preference"`
+	WeightUnit string `json:"weightUnit"`
+	HeightUnit string `json:"heightUnit"`
+	Weight     int    `json:"weight"`
+	Height     int    `json:"height"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	ImageUri   string `json:"imageUri"`
 }

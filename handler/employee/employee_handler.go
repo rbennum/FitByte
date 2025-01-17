@@ -56,7 +56,7 @@ func NewEmployeeHandlerInject(i do.Injector) (EmployeeHandler, error) {
 func (h *handler) Create(ctx *gin.Context) {
 	defer helper.FallbackResponse(ctx)
 
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate)
 		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
@@ -162,7 +162,7 @@ func (h handler) GetAll(ctx *gin.Context) {
 func (h *handler) Update(ctx *gin.Context) {
 	defer helper.FallbackResponse(ctx)
 
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
 		return
@@ -218,7 +218,7 @@ func (h *handler) Update(ctx *gin.Context) {
 func (h *handler) Delete(ctx *gin.Context) {
 	defer helper.FallbackResponse(ctx)
 
-	managerID, err := middleware.GetIdUserFromContext(ctx)
+	managerID, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		h.logger.Warn(err.Error(), helper.EmployeeHandlerCreate)
 		ctx.JSON(helper.GetErrorStatusCode(helper.ErrUnauthorized), helper.NewResponse(nil, err))
@@ -248,7 +248,7 @@ func (h *handler) Delete(ctx *gin.Context) {
 }
 
 func setGetEmployeeRequest(ctx *gin.Context, input *dto.GetEmployeesRequest) {
-	managerId, err := middleware.GetIdUserFromContext(ctx)
+	managerId, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, helper.NewResponse(nil, err))
 		return

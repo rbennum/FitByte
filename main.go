@@ -10,7 +10,8 @@ import (
 	"github.com/TimDebug/FitByte/cache"
 	"github.com/TimDebug/FitByte/config"
 	"github.com/TimDebug/FitByte/di"
-	"github.com/TimDebug/FitByte/migration"
+	"github.com/TimDebug/FitByte/infrastructure/migration"
+
 	"github.com/TimDebug/FitByte/server"
 	_ "github.com/joho/godotenv/autoload"
 )
