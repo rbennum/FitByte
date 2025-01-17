@@ -43,7 +43,7 @@ func (r *UserRepository) GetBatchOfProfiles(
 	ids []string,
 ) ([]entity.GetProfile, error) {
 	query := `
-		SELECT managerid, email, name, image_uri
+		SELECT id, email, name, image_uri
 		FROM Users
 		WHERE managerid = ANY($1::text[]);
 	`

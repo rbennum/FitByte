@@ -55,21 +55,15 @@ func (s *UserService) GetProfile(ctx *gin.Context, id string) (*dto.ResponseGetP
 	// Get from cache
 	cachedProfile, found := cache.GetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id))
 	if found {
-		height, err := strconv.Atoi(cachedProfile["height"])
-		weight, err := strconv.Atoi(cachedProfile["weight"])
-		if err != nil {
-			height = 0
-			weight = 0
-		}
 		return &dto.ResponseGetProfile{
-			Preference: cachedProfile["preference"],
-			WeightUnit: cachedProfile["weightUnit"],
-			HeightUnit: cachedProfile["heightUnit"],
-			Weight:     weight,
-			Height:     height,
+			Preference: getValue(cachedProfile, "preference", false).(*string),
+			WeightUnit: getValue(cachedProfile, "weightUnit", false).(*string),
+			HeightUnit: getValue(cachedProfile, "heightUnit", false).(*string),
+			Weight:     getValue(cachedProfile, "weight", true).(*int),
+			Height:     getValue(cachedProfile, "height", true).(*int),
 			Email:      cachedProfile["email"],
-			Name:       cachedProfile["name"],
-			ImageUri:   cachedProfile["imageUri"],
+			Name:       getValue(cachedProfile, "name", false).(*string),
+			ImageUri:   getValue(cachedProfile, "imageUri", false).(*string),
 		}, nil
 	}
 
@@ -97,9 +91,14 @@ func (s *UserService) GetProfile(ctx *gin.Context, id string) (*dto.ResponseGetP
 
 			// Put to cache
 			profileToCache := map[string]string{
-				"email":    *profile.Email,
-				"name":     *profile.Name,
-				"imageUri": *profile.ImageUri,
+				"preference": *profile.Preference,
+				"weightUnit": *profile.WeightUnit,
+				"heightUnit": *profile.HeightUnit,
+				"weight":     fmt.Sprintf("%d", &profile.Weight),
+				"height":     fmt.Sprintf("%d", &profile.Height),
+				"email":      *profile.Email,
+				"name":       *profile.Name,
+				"imageUri":   *profile.ImageUri,
 			}
 			cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id), profileToCache)
 		}
@@ -115,17 +114,37 @@ func (s *UserService) GetProfile(ctx *gin.Context, id string) (*dto.ResponseGetP
 
 		// Put to cache
 		profileToCache := map[string]string{
-			"email":    *profile.Email,
-			"name":     *profile.Name,
-			"imageUri": *profile.ImageUri,
+			"preference": *profile.Preference,
+			"weightUnit": *profile.WeightUnit,
+			"heightUnit": *profile.HeightUnit,
+			"weight":     fmt.Sprintf("%d", &profile.Weight),
+			"height":     fmt.Sprintf("%d", &profile.Height),
+			"email":      *profile.Email,
+			"name":       *profile.Name,
+			"imageUri":   *profile.ImageUri,
 		}
 		cache.SetAsMap(fmt.Sprintf(cache.CacheUserIdToProfile, id), profileToCache)
 	}
 
 	result := dto.ResponseGetProfile{
 		Email:    *profile.Email,
-		Name:     *profile.Name,
-		ImageUri: *profile.ImageUri,
+		Name:     profile.Name,
+		ImageUri: profile.ImageUri,
 	}
 	return &result, nil
+}
+
+func getValue(cache map[string]string, key string, asInt bool) interface{} {
+	val, exists := cache[key]
+	if !exists {
+		return nil
+	}
+	if asInt {
+		intVal, err := strconv.Atoi(val)
+		if err != nil {
+			return nil
+		}
+		return &intVal
+	}
+	return &val
 }
