@@ -1,18 +1,18 @@
 package server
 
 import (
+	"github.com/TimDebug/FitByte/di"
+	authHandler "github.com/TimDebug/FitByte/handler/auth"
+	departmentHandler "github.com/TimDebug/FitByte/handler/department"
+	employeeHandler "github.com/TimDebug/FitByte/handler/employee"
+	fileHandler "github.com/TimDebug/FitByte/handler/file"
+	userHandler "github.com/TimDebug/FitByte/handler/user"
+	"github.com/TimDebug/FitByte/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/levensspel/go-gin-template/di"
-	authHandler "github.com/levensspel/go-gin-template/handler/auth"
-	departmentHandler "github.com/levensspel/go-gin-template/handler/department"
-	employeeHandler "github.com/levensspel/go-gin-template/handler/employee"
-	fileHandler "github.com/levensspel/go-gin-template/handler/file"
-	userHandler "github.com/levensspel/go-gin-template/handler/user"
-	"github.com/levensspel/go-gin-template/middleware"
 	"github.com/samber/do/v2"
 
-	_ "github.com/levensspel/go-gin-template/docs"
+	_ "github.com/TimDebug/FitByte/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

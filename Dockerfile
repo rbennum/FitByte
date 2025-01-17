@@ -3,9 +3,6 @@
 # Start from the latest golang base image
 FROM golang:1.23 as builder
 
-# Add Maintainer Info
-LABEL maintainer="ad1ee"
-
 # Set the Current Working Directory inside the container
 WORKDIR /app
 

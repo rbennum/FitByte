@@ -3,8 +3,8 @@ package fileRepository
 import (
 	"context"
 
+	"github.com/TimDebug/FitByte/entity"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/levensspel/go-gin-template/entity"
 	"github.com/samber/do/v2"
 )
 

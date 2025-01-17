@@ -1,4 +1,4 @@
-module github.com/levensspel/go-gin-template
+module github.com/TimDebug/FitByte
 
 go 1.23.2
 

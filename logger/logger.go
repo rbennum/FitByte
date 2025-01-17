@@ -2,7 +2,7 @@
 package logger
 
 import (
-	"github.com/levensspel/go-gin-template/helper"
+	"github.com/TimDebug/FitByte/helper"
 	"github.com/samber/do/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

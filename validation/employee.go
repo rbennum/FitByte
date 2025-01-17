@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/TimDebug/FitByte/dto"
 	"github.com/go-playground/validator/v10"
-	"github.com/levensspel/go-gin-template/dto"
 )
 
 func ValidateEmployeeCreate(input *dto.EmployeePayload) error {

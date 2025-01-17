@@ -6,8 +6,8 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/TimDebug/FitByte/config"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/levensspel/go-gin-template/config"
 	"github.com/samber/do/v2"
 )
 

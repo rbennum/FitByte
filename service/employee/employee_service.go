@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/levensspel/go-gin-template/cache"
+	"github.com/TimDebug/FitByte/cache"
 
+	"github.com/TimDebug/FitByte/dto"
+	"github.com/TimDebug/FitByte/entity"
+	"github.com/TimDebug/FitByte/helper"
+	"github.com/TimDebug/FitByte/logger"
+	repositories "github.com/TimDebug/FitByte/repository/employee"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/levensspel/go-gin-template/dto"
-	"github.com/levensspel/go-gin-template/entity"
-	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/logger"
-	repositories "github.com/levensspel/go-gin-template/repository/employee"
 	"github.com/samber/do/v2"
 )
 

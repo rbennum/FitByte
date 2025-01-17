@@ -3,10 +3,10 @@ package migration
 import (
 	"fmt"
 
+	"github.com/TimDebug/FitByte/config"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/levensspel/go-gin-template/config"
 )
 
 const MIGRATION_FILE_PATH = "file://database/migrations"

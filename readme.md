@@ -1,4 +1,4 @@
-# Go PS-3-T
+# FitByte
 
 Cara run?
 
@@ -146,11 +146,3 @@ Jika `ENABLE_AUTO_MIGRATION` diset ke `FALSE`, migrasi perlu dijalankan secara m
     ```shell
     migrate create -ext sql -dir database/migrations <NameMigrationFile>   
     ```
-
-## Mode Auto Migration
-
-Jika `ENABLE_AUTO_MIGRATION` diset ke `TRUE`, migrasi akan dijalankan secara otomatis ketika aplikasi dijalankan.
-
-## Final Analysis
-
-If you want to read more about the load test result and its analysis, you can check [this document](analysis.md).

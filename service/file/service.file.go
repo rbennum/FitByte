@@ -7,11 +7,11 @@ import (
 	"mime/multipart"
 	"os"
 
-	"github.com/levensspel/go-gin-template/domain"
-	"github.com/levensspel/go-gin-template/dto"
-	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/logger"
-	repositories "github.com/levensspel/go-gin-template/repository/file"
+	"github.com/TimDebug/FitByte/domain"
+	"github.com/TimDebug/FitByte/dto"
+	"github.com/TimDebug/FitByte/helper"
+	"github.com/TimDebug/FitByte/logger"
+	repositories "github.com/TimDebug/FitByte/repository/file"
 	"github.com/samber/do/v2"
 )
 

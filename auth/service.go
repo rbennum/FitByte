@@ -39,8 +39,8 @@ func (s *jwtService) GenerateToken(userID string) (string, error) {
 	return signedToken, nil
 }
 
-func ParseToken(tokeString string) (id string, err error) {
-	token, err := jwt.Parse(tokeString, func(t *jwt.Token) (interface{}, error) {
+func ParseToken(tokenString string) (id string, err error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			return nil, errors.New("invalid token signing method")
 		}

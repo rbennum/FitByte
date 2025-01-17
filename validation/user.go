@@ -1,9 +1,10 @@
 package validation
 
 import (
+	"github.com/TimDebug/FitByte/dto"
 	"github.com/go-playground/validator/v10"
-	"github.com/levensspel/go-gin-template/dto"
-	repository "github.com/levensspel/go-gin-template/repository/user"
+
+	repository "github.com/TimDebug/FitByte/repository/user"
 )
 
 var validate = func() *validator.Validate {

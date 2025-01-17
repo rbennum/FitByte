@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/TimDebug/FitByte/domain"
+	"github.com/TimDebug/FitByte/dto"
+	"github.com/TimDebug/FitByte/helper"
+	"github.com/TimDebug/FitByte/logger"
+	fileService "github.com/TimDebug/FitByte/service/file"
 	"github.com/gin-gonic/gin"
-	"github.com/levensspel/go-gin-template/domain"
-	"github.com/levensspel/go-gin-template/dto"
-	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/logger"
-	fileService "github.com/levensspel/go-gin-template/service/file"
 	"github.com/samber/do/v2"
 )
 

@@ -7,13 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/levensspel/go-gin-template/cache"
-	"github.com/levensspel/go-gin-template/config"
-	"github.com/levensspel/go-gin-template/di"
-	"github.com/levensspel/go-gin-template/migration"
-
+	"github.com/TimDebug/FitByte/cache"
+	"github.com/TimDebug/FitByte/config"
+	"github.com/TimDebug/FitByte/di"
+	"github.com/TimDebug/FitByte/migration"
+	"github.com/TimDebug/FitByte/server"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/levensspel/go-gin-template/server"
 )
 
 func main() {

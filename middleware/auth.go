@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/TimDebug/FitByte/auth"
+	"github.com/TimDebug/FitByte/helper"
 	"github.com/gin-gonic/gin"
-	"github.com/levensspel/go-gin-template/auth"
-	"github.com/levensspel/go-gin-template/helper"
 )
 
 func Authorization(c *gin.Context) {

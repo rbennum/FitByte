@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/TimDebug/FitByte/dto"
+	"github.com/TimDebug/FitByte/helper"
+	"github.com/TimDebug/FitByte/logger"
+	service "github.com/TimDebug/FitByte/service/user"
 	"github.com/gin-gonic/gin"
-	"github.com/levensspel/go-gin-template/dto"
-	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/logger"
-	service "github.com/levensspel/go-gin-template/service/user"
 	"github.com/samber/do/v2"
 )
 

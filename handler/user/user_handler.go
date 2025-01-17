@@ -3,13 +3,13 @@ package userHandler
 import (
 	"net/http"
 
+	"github.com/TimDebug/FitByte/dto"
+	"github.com/TimDebug/FitByte/helper"
+	"github.com/TimDebug/FitByte/logger"
+	"github.com/TimDebug/FitByte/middleware"
+	service "github.com/TimDebug/FitByte/service/user"
+	"github.com/TimDebug/FitByte/validation"
 	"github.com/gin-gonic/gin"
-	"github.com/levensspel/go-gin-template/dto"
-	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/logger"
-	"github.com/levensspel/go-gin-template/middleware"
-	service "github.com/levensspel/go-gin-template/service/user"
-	"github.com/levensspel/go-gin-template/validation"
 	"github.com/samber/do/v2"
 )
 

@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"sync"
+
+	"github.com/TimDebug/FitByte/domain"
+	"github.com/TimDebug/FitByte/infrastructure"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/levensspel/go-gin-template/domain"
-	"github.com/levensspel/go-gin-template/infrastructure"
 	"github.com/samber/do/v2"
-	"io"
-	"log"
-	"os"
-	"sync"
 )
 
 var (

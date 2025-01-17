@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/levensspel/go-gin-template/domain"
+	"github.com/TimDebug/FitByte/domain"
 	"github.com/samber/do/v2"
 )
 

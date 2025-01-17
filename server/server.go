@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/TimDebug/FitByte/config"
+	dbcontext "github.com/TimDebug/FitByte/database"
+	"github.com/TimDebug/FitByte/helper"
+	"github.com/TimDebug/FitByte/middleware"
 	"github.com/gin-gonic/gin"
-	"github.com/levensspel/go-gin-template/config"
-	dbcontext "github.com/levensspel/go-gin-template/database"
-	"github.com/levensspel/go-gin-template/helper"
-	"github.com/levensspel/go-gin-template/middleware"
 )
 
 func Start() error {
