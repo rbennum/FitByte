@@ -1,4 +1,4 @@
-package userHandler
+package handler
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"github.com/TimDebug/FitByte/helper"
 	"github.com/TimDebug/FitByte/logger"
 	"github.com/TimDebug/FitByte/middleware"
-	service "github.com/TimDebug/FitByte/service/user"
+	"github.com/TimDebug/FitByte/service"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/do/v2"
 )
@@ -15,13 +15,13 @@ type UserHandler interface {
 	Get(ctx *gin.Context)
 }
 
-type handler struct {
+type userHandler struct {
 	service service.UserService
 	logger  logger.Logger
 }
 
 func NewUserHandler(service service.UserService, logger logger.Logger) UserHandler {
-	return &handler{service: service, logger: logger}
+	return &userHandler{service: service, logger: logger}
 }
 
 func NewUserHandlerInject(i do.Injector) (UserHandler, error) {
@@ -41,7 +41,7 @@ func NewUserHandlerInject(i do.Injector) (UserHandler, error) {
 // @Failure 400 {object} helper.Response{errors=helper.ErrorResponse} "Bad Request"
 // @Failure 401 {object} helper.Response{errors=helper.ErrorResponse} "Unauthorization"
 // @Router /v1/user [GET]
-func (h handler) Get(ctx *gin.Context) {
+func (h userHandler) Get(ctx *gin.Context) {
 	id, err := middleware.GetUserIdFromContext(ctx)
 	if err != nil {
 		ctx.JSON(helper.GetErrorStatusCode(err), helper.NewResponse(nil, err))

@@ -6,20 +6,12 @@ import (
 
 	"github.com/TimDebug/FitByte/database"
 	"github.com/TimDebug/FitByte/domain"
-	authHandler "github.com/TimDebug/FitByte/handler/auth"
-	departmentHandler "github.com/TimDebug/FitByte/handler/department"
-	employeeHandler "github.com/TimDebug/FitByte/handler/employee"
-	userHandler "github.com/TimDebug/FitByte/handler/user"
+	"github.com/TimDebug/FitByte/handler"
 	"github.com/TimDebug/FitByte/infrastructure/storage"
 	"github.com/TimDebug/FitByte/logger"
-	departmentService "github.com/TimDebug/FitByte/service/department"
-	user_service "github.com/TimDebug/FitByte/service/employee"
-	userService "github.com/TimDebug/FitByte/service/user"
+	"github.com/TimDebug/FitByte/repository"
+	"github.com/TimDebug/FitByte/service"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	departmentRepository "github.com/TimDebug/FitByte/repository/department"
-	repositories "github.com/TimDebug/FitByte/repository/employee"
-	userRepository "github.com/TimDebug/FitByte/repository/user"
 
 	"github.com/samber/do/v2"
 )
@@ -46,18 +38,12 @@ func init() {
 
 	// Setup repositories
 	// UserRepository
-	do.Provide[userRepository.UserRepository](Injector, userRepository.NewUserRepositoryInject)
-	do.Provide[departmentRepository.DepartmentRepository](Injector, departmentRepository.NewInject)
-	do.Provide[repositories.EmployeeRepository](Injector, repositories.NewEmployeeRepositoryInject)
+	do.Provide[repository.UserRepository](Injector, repository.NewUserRepositoryInject)
 
 	// Setup Services
-	do.Provide[userService.UserService](Injector, userService.NewUserServiceInject)
-	do.Provide[departmentService.DepartmentService](Injector, departmentService.NewInject)
-	do.Provide[user_service.EmployeeService](Injector, user_service.NewEmployeeServiceInject)
+	do.Provide[service.UserService](Injector, service.NewUserServiceInject)
 
 	// Setup Handlers
-	do.Provide[authHandler.AuthorizationHandler](Injector, authHandler.NewHandlerInject)
-	do.Provide[userHandler.UserHandler](Injector, userHandler.NewUserHandlerInject)
-	do.Provide[departmentHandler.DepartmentHandler](Injector, departmentHandler.NewInject)
-	do.Provide[employeeHandler.EmployeeHandler](Injector, employeeHandler.NewEmployeeHandlerInject)
+	do.Provide[handler.AuthorizationHandler](Injector, handler.NewHandlerInject)
+	do.Provide[handler.UserHandler](Injector, handler.NewUserHandlerInject)
 }

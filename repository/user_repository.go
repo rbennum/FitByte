@@ -1,4 +1,4 @@
-package userRepository
+package repository
 
 import (
 	"context"
@@ -49,7 +49,7 @@ func (r *UserRepository) GetBatchOfProfiles(
 	query := `
 		SELECT id, email, name, image_uri
 		FROM Users
-		WHERE managerid = ANY($1::text[]);
+		WHERE id = ANY($1::text[]);
 	`
 	rows, err := r.db.Query(ctx, query, ids)
 	if err != nil {

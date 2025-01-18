@@ -1,4 +1,4 @@
-package authHandler
+package handler
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"github.com/TimDebug/FitByte/dto"
 	"github.com/TimDebug/FitByte/helper"
 	"github.com/TimDebug/FitByte/logger"
-	service "github.com/TimDebug/FitByte/service/user"
+	"github.com/TimDebug/FitByte/service"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/do/v2"
 )
@@ -16,13 +16,13 @@ type AuthorizationHandler interface {
 	Register(ctx *gin.Context)
 }
 
-type handler struct {
+type authHandler struct {
 	service service.UserService
 	logger  logger.Logger
 }
 
 func NewHandler(service service.UserService, logger logger.Logger) AuthorizationHandler {
-	return &handler{service: service, logger: logger}
+	return &authHandler{service: service, logger: logger}
 }
 
 func NewHandlerInject(i do.Injector) (AuthorizationHandler, error) {
@@ -43,7 +43,7 @@ func NewHandlerInject(i do.Injector) (AuthorizationHandler, error) {
 // @Failure 404 {object} helper.Response{errors=helper.ErrorResponse} "Not Found"
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/login [POST]
-func (h handler) Login(ctx *gin.Context) {
+func (h authHandler) Login(ctx *gin.Context) {
 	requestBody := new(dto.UserRequestPayload)
 
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
@@ -73,7 +73,7 @@ func (h handler) Login(ctx *gin.Context) {
 // @Failure 409 {object} helper.Response{errors=helper.ErrorResponse} "Conflict"
 // @Failure 500 {object} helper.Response{errors=helper.ErrorResponse} "Server Error"
 // @Router /v1/register [POST]
-func (h handler) Register(ctx *gin.Context) {
+func (h authHandler) Register(ctx *gin.Context) {
 	requestBody := new(dto.UserRequestPayload)
 
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {

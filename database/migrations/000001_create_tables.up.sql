@@ -17,21 +17,14 @@ CREATE TABLE Users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE ActivityTypes (
-    id VARCHAR(255) NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    calories_per_minute DECIMAL(5,2) NOT NULL
-);
-
 CREATE TABLE Activities (
     id VARCHAR(255) NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
-    activity_type_id VARCHAR(255) NOT NULL,
     done_at TIMESTAMP,
     duration_in_minutes INT CHECK (duration_in_minutes >= 1),
-calories_burned DECIMAL(10,2),
+    calories_burned DECIMAL(10,2),
+    activity_type VARCHAR(10),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE,
-    FOREIGN KEY (activity_type_id) REFERENCES ActivityTypes (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 );

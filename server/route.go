@@ -4,8 +4,7 @@ import (
 	"net/http"
 
 	"github.com/TimDebug/FitByte/di"
-	authHandler "github.com/TimDebug/FitByte/handler/auth"
-	userHandler "github.com/TimDebug/FitByte/handler/user"
+	"github.com/TimDebug/FitByte/handler"
 	"github.com/TimDebug/FitByte/helper"
 	"github.com/TimDebug/FitByte/middleware"
 	"github.com/gin-gonic/gin"
@@ -28,8 +27,8 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 		swaggerRoute.GET("swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	userHandler := do.MustInvoke[userHandler.UserHandler](di.Injector)
-	authHandler := do.MustInvoke[authHandler.AuthorizationHandler](di.Injector)
+	userHandler := do.MustInvoke[handler.UserHandler](di.Injector)
+	authHandler := do.MustInvoke[handler.AuthorizationHandler](di.Injector)
 
 	controllers := r.Group("/v1")
 	{
