@@ -6,6 +6,7 @@ import (
 
 	"github.com/TimDebug/FitByte/database"
 	"github.com/TimDebug/FitByte/domain"
+	authHandler "github.com/TimDebug/FitByte/handler/auth"
 	departmentHandler "github.com/TimDebug/FitByte/handler/department"
 	employeeHandler "github.com/TimDebug/FitByte/handler/employee"
 	userHandler "github.com/TimDebug/FitByte/handler/user"
@@ -55,6 +56,7 @@ func init() {
 	do.Provide[user_service.EmployeeService](Injector, user_service.NewEmployeeServiceInject)
 
 	// Setup Handlers
+	do.Provide[authHandler.AuthorizationHandler](Injector, authHandler.NewHandlerInject)
 	do.Provide[userHandler.UserHandler](Injector, userHandler.NewUserHandlerInject)
 	do.Provide[departmentHandler.DepartmentHandler](Injector, departmentHandler.NewInject)
 	do.Provide[employeeHandler.EmployeeHandler](Injector, employeeHandler.NewEmployeeHandlerInject)

@@ -3,8 +3,6 @@ package validation
 import (
 	"github.com/TimDebug/FitByte/dto"
 	"github.com/go-playground/validator/v10"
-
-	repository "github.com/TimDebug/FitByte/repository/user"
 )
 
 var validate = func() *validator.Validate {
@@ -14,7 +12,7 @@ var validate = func() *validator.Validate {
 	return v
 }()
 
-func ValidateUserCreate(input dto.UserRequestPayload, r repository.UserRepository) error {
+func ValidateUserCreate(input dto.UserRequestPayload) error {
 	err := validate.Struct(input)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
@@ -22,15 +20,6 @@ func ValidateUserCreate(input dto.UserRequestPayload, r repository.UserRepositor
 			return fieldError
 		}
 	}
-	// (!) kedua dibawah ini transaksi db
-	// err = ValidateIsUsernameExist(input.Username, r)
-	// if err != nil {
-	// 	return err
-	// }
-	// err = ValidateIsEmailExist(input.Email, r)
-	// if err != nil {
-	// 	return err
-	// }
 	return nil
 }
 

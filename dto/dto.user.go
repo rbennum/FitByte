@@ -1,24 +1,6 @@
 package dto
 
-const (
-	Create string = "create"
-	Login  string = "login"
-)
-
 type UserRequestPayload struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=32"`
-	Action   string `json:"action" validate:"required"`
-}
-
-type RequestRegister struct {
-	Id       string `json:"id,omitempty"`
-	Username string `json:"username" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=32"`
-}
-
-type RequestLogin struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8,max=32"`
 }
@@ -38,18 +20,7 @@ type RequestUpdateProfile struct {
 }
 
 // Responses
-type Response struct {
-	Id       string `json:"id,omitempty"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-}
-
-type ResponseRegister struct {
-	Email string `json:"email"`
-	Token string `json:"token"`
-}
-
-type ResponseLogin struct {
+type ResponseAuth struct {
 	Email string `json:"email"`
 	Token string `json:"token"`
 }

@@ -15,142 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/auth": {
-            "post": {
-                "description": "either create or login",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Entry for authentication or create new user",
-                "parameters": [
-                    {
-                        "description": "data",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserRequestPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "EXISTING",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/helper.Response"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "201": {
-                        "description": "CREATED",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/helper.Response"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Server Error",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/v1/department": {
             "get": {
                 "description": "List all available departments",
@@ -997,9 +861,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/file": {
+        "/v1/login": {
             "post": {
-                "description": "Upload an file",
+                "description": "User Login",
                 "consumes": [
                     "application/json"
                 ],
@@ -1007,28 +871,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "file"
+                    "auth"
                 ],
-                "summary": "Upload an file",
+                "summary": "User Login",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Bearer JWT token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Body with file zip",
-                        "name": "File",
-                        "in": "formData",
-                        "required": true
+                        "description": "data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserRequestPayload"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "File uploaded successfully",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -1038,25 +897,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.FileUploadRespondPayload"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "201": {
-                        "description": "File created successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.FileUploadRespondPayload"
+                                            "$ref": "#/definitions/helper.Response"
                                         }
                                     }
                                 }
@@ -1081,8 +922,8 @@ const docTemplate = `{
                             ]
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized - Missing or invalid token",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "allOf": [
                                 {
@@ -1099,8 +940,72 @@ const docTemplate = `{
                             ]
                         }
                     },
-                    "413": {
-                        "description": "Payload Too Large",
+                    "500": {
+                        "description": "Server Error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/definitions/helper.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/register": {
+            "post": {
+                "description": "User Register",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User Register",
+                "parameters": [
+                    {
+                        "description": "data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserRequestPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/helper.Response"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "allOf": [
                                 {
@@ -1117,8 +1022,26 @@ const docTemplate = `{
                             ]
                         }
                     },
-                    "415": {
-                        "description": "Unsupported Media Type",
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/definitions/helper.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Server Error",
                         "schema": {
                             "allOf": [
                                 {
@@ -1216,276 +1139,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "put": {
-                "description": "Update user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Update user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer + user token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "data",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserRequestUpdate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/helper.Response"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorization",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Delete user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer + user token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/helper.Response"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorization",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "description": "Update profile",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Update profile",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer + user token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "data",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RequestUpdateProfile"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/helper.Response"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorization",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/definitions/helper.ErrorResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
             }
         }
     },
@@ -1518,14 +1171,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 33,
                     "minLength": 4
-                }
-            }
-        },
-        "dto.FileUploadRespondPayload": {
-            "type": "object",
-            "properties": {
-                "uri": {
-                    "type": "string"
                 }
             }
         },
@@ -1577,61 +1222,20 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RequestUpdateProfile": {
-            "type": "object",
-            "properties": {
-                "companyImageUri": {
-                    "type": "string"
-                },
-                "companyName": {
-                    "type": "string",
-                    "maxLength": 52,
-                    "minLength": 4
-                },
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 52,
-                    "minLength": 4
-                },
-                "userImageUri": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.UserRequestPayload": {
             "type": "object",
             "required": [
-                "action",
                 "email",
                 "password"
             ],
             "properties": {
-                "action": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string",
+                    "maxLength": 32,
                     "minLength": 8
-                }
-            }
-        },
-        "dto.UserRequestUpdate": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },

@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	"github.com/TimDebug/FitByte/cache"
-	"github.com/TimDebug/FitByte/config"
 	"github.com/TimDebug/FitByte/di"
 	"github.com/TimDebug/FitByte/infrastructure/migration"
 
@@ -19,9 +18,7 @@ import (
 func main() {
 	healthCheckDI()
 
-	if config.EnableAutoMigrate() {
-		migration.AutoMigrate()
-	}
+	migration.AutoMigrate()
 
 	cache.Initialize()
 	// Handle graceful shutdown

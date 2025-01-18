@@ -11,7 +11,7 @@ var (
 	ErrNotFound     = errors.New("record not found")
 	ErrUnauthorized = errors.New("unauthorized")
 	ErrBadRequest   = errors.New("bad request")
-	ErrConflict     = errors.New("data conflict")
+	ErrConflict     = NewErrorResponse(409, "Conflict")
 
 	ErrInvalidDepartmentId    = errors.New("invalid department id")
 	ErrConflictIdentityNumber = errors.New("identity number conflict")
