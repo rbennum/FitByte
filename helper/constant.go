@@ -17,29 +17,12 @@ const (
 	UserServiceDeleteByID FunctionCaller = "userService.DeleteById"
 	UserServiceGetProfile FunctionCaller = "userService.GetProfile"
 
-	EmployeeHandlerCreate       FunctionCaller = "EmployeeHandler.Create"
-	EmployeeHandlerGetEmployees FunctionCaller = "EmployeeHandler.GetEmployees"
-	EmployeeHandlerUpdate       FunctionCaller = "EmployeeHandler.Update"
-	EmployeeHandlerDelete       FunctionCaller = "EmployeeHandler.Delete"
-
-	EmployeeServiceCreate FunctionCaller = "employeeService.Create"
-	EmployeeServiceGet    FunctionCaller = "employeeService.Get"
-	EmployeeServiceUpdate FunctionCaller = "employeeService.Update"
-	EmployeeServiceDelete FunctionCaller = "employeeService.Delete"
+	ActivityHandlerGetAll FunctionCaller = "ActivityHandler.GetAll"
+	ActivityServiceGetAll FunctionCaller = "ActivityService.GetAll"
 
 	GenerateFromPassword FunctionCaller = "GenerateFromPassword"
 
 	UserHandler FunctionCaller = "UserHandler"
-
-	DepartmentHandlerCreate FunctionCaller = "DepartmentHandler.Create"
-	DepartmentHandlerGetAll FunctionCaller = "DepartmentHandler.GetAll"
-	DepartmentHandlerPatch  FunctionCaller = "DepartmentHandler.Patch"
-	DepartmentHandlerDelete FunctionCaller = "DepartmentHandler.Delete"
-
-	DepartmentServiceCreate FunctionCaller = "DepartmentService.Create"
-	DepartmentServiceGetAll FunctionCaller = "DepartmentService.GetAll"
-	DepartmentServicePatch  FunctionCaller = "DepartmentService.Patch"
-	DepartmentServiceDelete FunctionCaller = "DepartmentService.Delete"
 )
 
 var ErrorBadRequest = errors.New("invalid request format")

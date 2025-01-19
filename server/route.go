@@ -29,6 +29,7 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 
 	userHandler := do.MustInvoke[handler.UserHandler](di.Injector)
 	authHandler := do.MustInvoke[handler.AuthorizationHandler](di.Injector)
+	activityHandler := do.MustInvoke[handler.ActivityHandler](di.Injector)
 
 	controllers := r.Group("/v1")
 	{
@@ -37,6 +38,10 @@ func NewRouter(r *gin.Engine, db *pgxpool.Pool) {
 		user := controllers.Group("/user")
 		{
 			user.GET("", middleware.Authorization, userHandler.Get)
+		}
+		activity := controllers.Group("/activity")
+		{
+			activity.GET("", middleware.Authorization, activityHandler.GetAll)
 		}
 	}
 }

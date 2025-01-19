@@ -26,6 +26,78 @@ definitions:
 info:
   contact: {}
 paths:
+  /v1/activity:
+    get:
+      consumes:
+      - application/json
+      description: List all available activities
+      parameters:
+      - description: limit query param
+        in: query
+        name: limit
+        type: integer
+      - description: offset query param
+        in: query
+        name: offset
+        type: integer
+      - description: activity name
+        in: query
+        name: name
+        type: string
+      - description: done at from in ISO date
+        in: query
+        name: doneAtFrom
+        type: string
+      - description: done at from in ISO date
+        in: query
+        name: doneAtTo
+        type: string
+      - description: calories burned minimum
+        in: query
+        name: caloriesBurnedMin
+        type: integer
+      - description: calories burned maximum
+        in: query
+        name: caloriesBurnedMax
+        type: integer
+      - description: Bearer JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/helper.Response'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+        "500":
+          description: Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                errors:
+                  $ref: '#/definitions/helper.ErrorResponse'
+              type: object
+      summary: Fetch a list of all activities
+      tags:
+      - activity
   /v1/login:
     post:
       consumes:

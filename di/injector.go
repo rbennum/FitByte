@@ -39,11 +39,14 @@ func init() {
 	// Setup repositories
 	// UserRepository
 	do.Provide[repository.UserRepository](Injector, repository.NewUserRepositoryInject)
+	do.Provide[repository.ActivityRepository](Injector, repository.NewActivityRepositoryInject)
 
 	// Setup Services
 	do.Provide[service.UserService](Injector, service.NewUserServiceInject)
+	do.Provide[service.ActivityService](Injector, service.NewActivityServiceInject)
 
 	// Setup Handlers
 	do.Provide[handler.AuthorizationHandler](Injector, handler.NewHandlerInject)
 	do.Provide[handler.UserHandler](Injector, handler.NewUserHandlerInject)
+	do.Provide[handler.ActivityHandler](Injector, handler.NewActivityHandlerInject)
 }

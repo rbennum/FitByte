@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -42,7 +41,7 @@ func GetUserIdFromContext(ctx *gin.Context) (string, error) {
 	id, ok := ctx.Value("user_id").(string)
 	if !ok {
 		log.Printf(`Failed get data user context %v`, ctx.Value("user_id"))
-		return "", fmt.Errorf("invalid user context")
+		return "", helper.NewErrorResponse(http.StatusInternalServerError, "error getting user id from context")
 	}
 	return id, nil
 }
